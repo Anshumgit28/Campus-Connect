@@ -1,66 +1,43 @@
 const express = require("express");
-const mysql = require("mysql2");
-const bodyParser = require("body-parser");
+const session = require("express-session");
 const path = require("path");
 
 const app = express();
 
-// Middleware
-app.use(bodyParser.urlencoded({ extended: true }));
+/* =========================
+   MIDDLEWARE
+========================= */
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+
+app.use(session({
+  secret: "campus-connect-secret",
+  resave: false,
+  saveUninitialized: true
+}));
+
+/* =========================
+   STATIC FILES
+========================= */
 app.use(express.static(path.join(__dirname, "public")));
 
-// Database connection
-const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "minor_project",
-  port: 3307
+/* =========================
+   ROUTES
+========================= */
+app.use("/", require("./routes/auth"));
+app.use("/", require("./routes/dashboard"));
+app.use("/", require("./routes/admin"));
+
+/* =========================
+   DEFAULT ROUTE
+========================= */
+app.get("/", (req, res) => {
+  res.redirect("/login.html");
 });
 
-db.connect((err) => {
-  if (err) {
-    console.log("Database error:", err);
-  } else {
-    console.log("MySQL connected");
-  }
-});
-
-// REGISTER
-app.post("/register", (req, res) => {
-  const { username, email, password } = req.body;
-
-  db.query(
-    "INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
-    [username, email, password],
-    (err) => {
-      if (err) {
-        res.send("Registration failed");
-      } else {
-        res.redirect("/login.html");
-      }
-    }
-  );
-});
-
-// LOGIN
-app.post("/login", (req, res) => {
-  const { email, password } = req.body;
-
-  db.query(
-    "SELECT * FROM users WHERE email=? AND password=?",
-    [email, password],
-    (err, result) => {
-      if (result.length > 0) {
-        res.redirect("/dashboard.html");
-      } else {
-        res.send("Invalid credentials");
-      }
-    }
-  );
-});
-
-// Server
+/* =========================
+   SERVER START
+========================= */
 app.listen(3000, () => {
-  console.log("Server running on port 3000");
+  console.log("Server running at http://localhost:3000");
 });

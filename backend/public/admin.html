@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Panel | Campus Connect</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="dashboard-body">
+
+<header class="navbar">
+  <div class="brand">
+    <div class="logo-icon">A</div>
+    <span class="brand-name">ADMIN PANEL</span>
+  </div>
+
+  <a class="logout-btn" href="/logout">Logout</a>
+</header>
+
+<main class="dashboard">
+
+  <section class="greeting">
+    <h1>Admin Control Panel</h1>
+    <p>Manage campus system</p>
+  </section>
+
+  <section class="snapshot">
+    <div class="snap-card">
+      <h3>📢 Add Notice</h3>
+      <form action="/admin/notice" method="post">
+        <input name="title" placeholder="Notice text" required>
+        <button>Add</button>
+      </form>
+    </div>
+
+    <div class="snap-card">
+      <h3>🎉 Create Event</h3>
+      <form action="/admin/event" method="post">
+        <input name="title" placeholder="Event name" required>
+        <input type="date" name="event_date" required>
+        <button>Create</button>
+      </form>
+    </div>
+
+    <div class="snap-card">
+      <h3>🏫 Add Club</h3>
+      <form action="/admin/club" method="post">
+        <input name="name" placeholder="Club name" required>
+        <button>Add</button>
+      </form>
+    </div>
+  </section>
+
+</main>
+
+</body>
+</html>

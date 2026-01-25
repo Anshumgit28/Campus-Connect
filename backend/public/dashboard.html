@@ -1,24 +1,107 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Dashboard | Campus Connect</title>
+  <meta charset="UTF-8">
+  <title>Dashboard | UNI-VERSE</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
 
-<div class="dashboard">
-  <h1>Welcome to Campus Connect</h1>
-  <p>You are logged in successfully.</p>
+<body class="dashboard-body">
 
-  <div class="features">
-    <div class="box">📢 Notices</div>
-    <div class="box">📚 Study Resources</div>
-    <div class="box">🎉 Events</div>
-    <div class="box">👥 Student Network</div>
+<!-- NAVBAR -->
+<header class="navbar">
+
+  <!-- LOGO -->
+  <div class="brand">
+    <div class="logo-icon">U</div>
+    <span class="brand-name">UNI-VERSE</span>
   </div>
 
-  <a class="logout" href="/login.html">Logout</a>
-</div>
+  <!-- NAV LINKS -->
+  <nav>
+    <a href="#">Events</a>
+    <a href="#">Clubs</a>
+    <a href="#">Resources</a>
+  </nav>
+
+  <a class="logout-btn" href="/login.html">Logout</a>
+</header>
+
+<!-- MAIN DASHBOARD -->
+<main class="dashboard">
+
+  <!-- GREETING -->
+  <section class="greeting">
+    <h1>Good Morning 👋</h1>
+    <p>Welcome to your university space</p>
+  </section>
+
+  <!-- SNAPSHOT -->
+  <section class="snapshot">
+    <div class="snap-card">
+      <h3>📢 Notices</h3>
+      <p>2 New</p>
+    </div>
+    <div class="snap-card">
+      <h3>🎉 Events</h3>
+      <p>1 Today</p>
+    </div>
+    <div class="snap-card">
+      <h3>📚 Resources</h3>
+      <p>3 Added</p>
+    </div>
+    <div class="snap-card">
+      <h3>🏫 Clubs</h3>
+      <p>6 Joined</p>
+    </div>
+  </section>
+
+  <!-- GRID -->
+  <section class="main-grid">
+
+    <div class="card">
+      <h2>Recent Activity</h2>
+      <ul class="activity-list">
+        <li>✔ Joined <strong>Photography Club</strong></li>
+        <li>📢 New notice: <strong>Exam Schedule</strong></li>
+        <li>🎉 Registered for <strong>Tech Fest</strong></li>
+        <li>📚 Downloaded <strong>DBMS Notes</strong></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Upcoming Events</h2>
+      <ul class="event-list">
+        <li><span class="date today">Today</span> Guest Lecture · 4 PM</li>
+        <li><span class="date">Tomorrow</span> Football Match</li>
+        <li><span class="date">Jan 25</span> Hackathon</li>
+      </ul>
+    </div>
+
+  </section>
+
+  <!-- ENGAGEMENT -->
+  <section class="engagement">
+    <h2>Your Engagement</h2>
+    <p>You’re more active than <strong>58%</strong> of students</p>
+
+    <div class="progress-bar">
+      <div class="progress-fill"></div>
+    </div>
+  </section>
+
+  <!-- QUICK ACTIONS -->
+  <section class="quick-actions">
+    <h2>Quick Actions</h2>
+    <div class="action-grid">
+      <div class="action">➕ Post Notice</div>
+      <div class="action">🎉 Create Event</div>
+      <div class="action">📤 Upload Resource</div>
+      <div class="action">🏫 Explore Clubs</div>
+    </div>
+  </section>
+
+</main>
 
 </body>
 </html>

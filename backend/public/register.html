@@ -1,26 +1,26 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>Register | Campus Connect</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="auth-body">
 
-<div class="card">
+<div class="auth-card">
   <h2>Campus Connect</h2>
-  <p>Create your account</p>
+  <p class="subtitle">Create your account</p>
 
   <form action="/register" method="post">
-    <input type="text" name="username" placeholder="Full Name" required>
-    <input type="email" name="email" placeholder="College Email" required>
+    <input type="text" name="username" placeholder="Full name" required>
+    <input type="email" name="email" placeholder="College email" required>
     <input type="password" name="password" placeholder="Password" required>
     <button type="submit">Register</button>
   </form>
 
-  <span>
-    Already have an account?
-    <a href="/login.html">Login</a>
-  </span>
+  <p class="switch">
+    Already registered? <a href="/login.html">Login</a>
+  </p>
 </div>
 
 </body>

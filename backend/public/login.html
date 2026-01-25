@@ -1,25 +1,25 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>Login | Campus Connect</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="auth-body">
 
-<div class="card">
+<div class="auth-card">
   <h2>Campus Connect</h2>
-  <p>Login to your account</p>
+  <p class="subtitle">Welcome back 👋</p>
 
   <form action="/login" method="post">
-    <input type="email" name="email" placeholder="Email" required>
+    <input type="email" name="email" placeholder="Email address" required>
     <input type="password" name="password" placeholder="Password" required>
     <button type="submit">Login</button>
   </form>
 
-  <span>
-    New user?
-    <a href="/register.html">Create account</a>
-  </span>
+  <p class="switch">
+    New here? <a href="/register.html">Create account</a>
+  </p>
 </div>
 
 </body>
