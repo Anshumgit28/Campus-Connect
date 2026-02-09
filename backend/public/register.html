@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <title>Register | Campus Connect</title>
-  <link rel="stylesheet" href="style.css">
+
+  <!-- ✅ FIXED -->
+  <link rel="stylesheet" href="/css/style.css">
 </head>
 <body class="auth-body">
 
@@ -11,6 +13,7 @@
   <h2>Campus Connect</h2>
   <p class="subtitle">Create your account</p>
 
+  <!-- ✅ CORRECT BACKEND ROUTE -->
   <form action="/register" method="post">
     <input type="text" name="username" placeholder="Full name" required>
     <input type="email" name="email" placeholder="College email" required>
@@ -19,6 +22,7 @@
   </form>
 
   <p class="switch">
+    <!-- ✅ CORRECT -->
     Already registered? <a href="/login.html">Login</a>
   </p>
 </div>

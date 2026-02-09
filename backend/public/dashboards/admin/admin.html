@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <title>Admin Panel | Campus Connect</title>
-  <link rel="stylesheet" href="style.css">
+
+  <!-- ✅ FIXED PATH -->
+  <link rel="stylesheet" href="/css/style.css">
 </head>
 
 <body class="dashboard-body">
@@ -19,36 +21,64 @@
 
 <main class="dashboard">
 
+  <!-- HEADER -->
   <section class="greeting">
     <h1>Admin Control Panel</h1>
     <p>Manage campus system</p>
   </section>
 
+  <!-- ADMIN ACTIONS -->
   <section class="snapshot">
+
+    <!-- ADD NOTICE -->
     <div class="snap-card">
       <h3>📢 Add Notice</h3>
       <form action="/admin/notice" method="post">
         <input name="title" placeholder="Notice text" required>
-        <button>Add</button>
+        <button>Add Notice</button>
       </form>
     </div>
 
+    <!-- CREATE EVENT -->
     <div class="snap-card">
       <h3>🎉 Create Event</h3>
+
       <form action="/admin/event" method="post">
+
         <input name="title" placeholder="Event name" required>
+
+        <textarea name="description" placeholder="Event description" required></textarea>
+
+        <select name="category" required>
+          <option value="">Select Category</option>
+          <option value="Academic">🎓 Academic</option>
+          <option value="Cultural">🎉 Cultural</option>
+          <option value="Sports">⚽ Sports</option>
+          <option value="Technical">💻 Technical</option>
+        </select>
+
         <input type="date" name="event_date" required>
-        <button>Create</button>
+        <input type="time" name="event_time" required>
+
+        <input name="venue" placeholder="Venue" required>
+        <input name="organizer" placeholder="Organizer" required>
+
+        <input type="number" name="seats" placeholder="Seats Available" required>
+
+        <button>Create Event</button>
+
       </form>
     </div>
 
+    <!-- ADD CLUB -->
     <div class="snap-card">
       <h3>🏫 Add Club</h3>
       <form action="/admin/club" method="post">
         <input name="name" placeholder="Club name" required>
-        <button>Add</button>
+        <button>Add Club</button>
       </form>
     </div>
+
   </section>
 
 </main>

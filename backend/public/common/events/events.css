@@ -1,0 +1,170 @@
+/* =====================================================
+EVENTS MODULE — SAFE + ISOLATED
+Uses dashboard design system
+No overrides
+===================================================== */
+
+
+/* ===============================
+PAGE WRAPPER
+(Uses dashboard class safely)
+=============================== */
+
+.dashboard{
+
+gap:32px; /* slightly more breathing room */
+
+}
+
+
+ 
+/* ===============================
+FILTER BAR (Upgrade from inline styles)
+=============================== */
+
+#categoryFilter{
+
+padding:12px 16px;
+
+border-radius:12px;
+border:1px solid var(--border);
+
+background:white;
+
+font-size:14px;
+
+transition:.25s;
+}
+
+#categoryFilter:focus{
+
+outline:none;
+border-color:var(--primary);
+
+box-shadow:0 0 0 4px rgba(99,102,241,.12);
+
+}
+
+
+
+/* Wrap the label + select nicely */
+
+section label{
+
+color:var(--text);
+font-weight:600;
+}
+
+
+
+/* ===============================
+EVENT GRID
+(Overrides snapshot safely)
+=============================== */
+
+#eventList{
+
+width:100%;
+
+display:grid;
+
+grid-template-columns:
+repeat(auto-fill, minmax(300px,1fr));
+
+gap:24px;
+
+}
+
+
+
+/* ===============================
+EVENT CARD
+(Upgraded snap-card)
+=============================== */
+
+#eventList .snap-card{
+
+padding:24px;
+
+border-radius:20px;
+
+background:linear-gradient(
+180deg,
+#ffffff,
+#f8faff
+);
+
+border:1px solid var(--border);
+
+box-shadow:0 15px 35px rgba(0,0,0,.05);
+
+transition:.30s;
+
+cursor:pointer;
+}
+
+#eventList .snap-card:hover{
+
+transform:translateY(-10px);
+
+box-shadow:0 30px 60px rgba(99,102,241,.18);
+
+}
+
+
+
+/* title */
+
+.snap-card h3{
+
+font-size:18px;
+font-weight:700;
+color:var(--text);
+
+margin-bottom:6px;
+}
+
+
+
+/* description */
+
+.snap-card p{
+
+font-size:14px;
+color:var(--muted);
+line-height:1.5;
+}
+
+
+/* ===============================
+BUTTON
+=============================== */
+
+.snap-card button{
+
+padding:10px 14px;
+
+border:none;
+border-radius:10px;
+
+background:linear-gradient(
+135deg,
+var(--primary),
+var(--secondary)
+);
+
+color:white;
+font-weight:600;
+
+cursor:pointer;
+
+transition:.25s;
+}
+
+.snap-card button:hover{
+
+transform:translateY(-3px);
+
+box-shadow:0 12px 24px rgba(99,102,241,.28);
+
+}

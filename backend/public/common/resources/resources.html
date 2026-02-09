@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Resources | Campus Connect</title>
+
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/common/resources/resources.css">
+
+
+</head>
+
+<body class="dashboard-body">
+
+
+
+<div class="layout">
+
+
+    <!-- ===============================
+    SIDEBAR (Same as Dashboard)
+    ================================ -->
+    <aside class="sidebar">
+
+        <div class="logo-icon">R</div>
+
+        <a href="/dashboard">Dashboard</a>
+        <a href="/common/events/events.html">Events</a>
+        <a href="/common/resources/resources.html">Resources</a>
+
+    </aside>
+
+
+
+    <!-- ===============================
+    MAIN AREA
+    ================================ -->
+    <div style="width:100%;">
+
+
+        <!-- ✅ USE SAME DASHBOARD NAVBAR -->
+        <header class="navbar">
+
+            <div class="brand">
+                <div class="logo-icon">R</div>
+                <span class="brand-name">RESOURCES</span>
+            </div>
+
+            <nav>
+                <a href="/dashboard">Dashboard</a>
+                <a href="/common/events/events.html">Events</a>
+                <a href="/common/resources/resources.html" class="active-link">Resources</a>
+
+            <a class="logout-btn" href="/logout">Logout</a>
+
+        </header>
+
+
+
+        <!-- ===============================
+        PAGE CONTENT
+        ================================ -->
+        <main class="resources-wrapper">
+
+            <!-- HERO -->
+            <section class="greeting">
+                <h1>📚 Resource Library</h1>
+                <p>Search, download and save academic materials</p>
+            </section>
+
+
+            <!-- SEARCH -->
+            <div class="resources-controls">
+
+                <input 
+                    class="resource-input"
+                    id="search"
+                    placeholder="Search resources..."
+                >
+
+                <select class="resource-input" id="semester">
+                    <option value="">All Semester</option>
+                    <option>1</option>
+                    <option>2</option>
+                    <option>3</option>
+                    <option>4</option>
+                    <option>5</option>
+                    <option>6</option>
+                    <option>7</option>
+                    <option>8</option>
+                </select>
+
+                <select class="resource-input" id="type">
+                    <option value="">All Types</option>
+                    <option>PDF</option>
+                    <option>PPT</option>
+                    <option>DOC</option>
+                    <option>Video</option>
+                </select>
+
+            </div>
+
+
+            <!-- GRID -->
+            <section id="resourceList" class="resource-grid"></section>
+
+        </main>
+
+    </div>
+
+</div>
+
+
+
+<script>
+
+/* =========================
+LOAD RESOURCES
+========================= */
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  loadResources();
+
+  document.getElementById("search")
+  .addEventListener("input", loadResources);
+
+  document.getElementById("semester")
+  .addEventListener("change", loadResources);
+
+  document.getElementById("type")
+  .addEventListener("change", loadResources);
+
+});
+
+
+function loadResources(){
+
+const search = document.getElementById("search").value;
+const semester = document.getElementById("semester").value;
+const type = document.getElementById("type").value;
+
+fetch(`/resources?search=${search}&semester=${semester}&type=${type}`, {
+  credentials: "include"
+})
+.then(res => {
+
+ if(res.status === 401){
+    window.location = "/login.html";
+    return;
+ }
+ if(res.status === 403){
+    alert("You do not have permission to access this.");
+    window.location = "/dashboard";
+    return;
+}
+ return res.json();
+})
+
+.then(resources => {
+
+const container = document.getElementById("resourceList");
+container.innerHTML = "";
+
+if(!resources || resources.length === 0){
+
+container.innerHTML = `
+<p style="color:#6b7280;">
+No resources found.
+</p>
+`;
+
+return;
+}
+
+
+resources.forEach(r => {
+
+const card = document.createElement("div");
+card.className = "resource-card";
+
+card.innerHTML = `
+
+<div class="resource-title">
+${r.title}
+</div>
+
+<div class="resource-meta">
+Semester ${r.semester || "N/A"} • ${r.type || "File"}
+</div>
+
+<div class="resource-downloads">
+Downloads: ${r.downloads || 0}
+</div>
+
+<div class="resource-actions">
+
+<button class="download-btn"
+onclick="download(${r.id})">
+Download
+</button>
+
+<button class="save-btn"
+onclick="save(${r.id})">
+Save
+</button>
+
+</div>
+`;
+
+container.appendChild(card);
+
+});
+
+})
+.catch(err => {
+
+console.log("RESOURCE LOAD ERROR:", err);
+
+document.getElementById("resourceList").innerHTML =
+"<p style='color:red;'>Error loading resources</p>";
+
+});
+
+}
+
+
+
+function download(id){
+window.location = "/resources/download/" + id;
+}
+
+
+
+function save(id){
+
+fetch("/resources/save",{
+
+credentials: "include",
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+resourceId:id
+})
+
+})
+.then(res=>res.json())
+.then(data=>{
+
+if(data.success){
+alert("✅ Resource saved!");
+}else{
+alert("Already saved.");
+}
+
+});
+
+}
+
+</script>
+
+</body>
+</html>

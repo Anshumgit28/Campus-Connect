@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Event Details</title>
+
+  <!-- ✅ FIXED CSS PATH -->
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="dashboard-body">
+
+<main class="dashboard">
+<div id="eventDetails"></div>
+</main>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const eventId = params.get("id");
+
+// ✅ CORRECT — DO NOT CHANGE
+fetch("/events/" + eventId)
+  .then(res => res.json())
+  .then(event => {
+    document.getElementById("eventDetails").innerHTML = `
+      <div class="card">
+        <h2>${event.title}</h2>
+        <p>${event.description}</p>
+        <p><strong>Category:</strong> ${event.category}</p>
+        <p><strong>Date:</strong> ${event.event_date}</p>
+        <p><strong>Time:</strong> ${event.event_time}</p>
+        <p><strong>Venue:</strong> ${event.venue}</p>
+        <p><strong>Organizer:</strong> ${event.organizer}</p>
+        <p><strong>Seats:</strong> ${event.seats}</p>
+        <button onclick="register()">Register</button>
+        <button onclick="cancel()">Cancel Registration</button>
+      </div>
+    `;
+  });
+
+function register() {
+  fetch("/events/register", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ eventId })
+  }).then(() => alert("Registered Successfully"));
+}
+
+function cancel() {
+  fetch("/events/cancel", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ eventId })
+  }).then(() => alert("Registration Cancelled"));
+}
+</script>
+
+</body>
+</html>

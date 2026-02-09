@@ -1,6 +1,12 @@
-module.exports = (req, res, next) => {
-  if (!req.session.user || req.session.user.role !== "admin") {
-    return res.status(403).send("Access Denied");
+module.exports = function adminOnly(req, res, next) {
+
+  if (!req.session.user) {
+    return res.redirect("/login.html");
   }
+
+  if (req.session.user.role !== "admin") {
+    return res.redirect("/dashboard"); // better UX
+  }
+
   next();
 };

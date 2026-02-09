@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Alumni Control</title>
+
+<!-- ✅ FIXED CSS -->
+<link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body class="dashboard-body">
+
+<div class="layout">
+
+<aside class="sidebar">
+<div class="logo-icon">A</div>
+
+<!-- ✅ FIXED DASHBOARD LINK -->
+<a href="/dashboards/alumni/alumni-dashboard.html">Dashboard</a>
+
+<a href="/logout">Logout</a>
+
+</aside>
+
+
+<main class="dashboard">
+
+<section class="greeting">
+<h1>Alumni Control Panel</h1>
+<p>Maintain your professional profile</p>
+</section>
+
+<div class="card">
+
+<input id="full_name" placeholder="Full Name">
+<input id="graduation_year" placeholder="Graduation Year">
+<input id="degree" placeholder="Degree">
+
+<input id="company" placeholder="Company">
+<input id="job_title" placeholder="Job Title">
+<input id="work_location" placeholder="Work Location">
+
+<input id="linkedin" placeholder="LinkedIn URL">
+
+<br><br>
+
+<button id="saveBtn">Update Profile</button>
+
+</div>
+
+</main>
+</div>
+
+<script>
+
+/* LOAD */
+
+fetch("/alumni/profile") // ✅ CORRECT
+.then(res=>res.json())
+.then(data=>{
+
+if(!data) return;
+
+Object.keys(data).forEach(key=>{
+if(document.getElementById(key)){
+document.getElementById(key).value=data[key];
+}
+});
+
+});
+
+
+/* SAVE */
+
+document.getElementById("saveBtn")
+.addEventListener("click",()=>{
+
+fetch("/alumni/profile/update",{  // ✅ CORRECT
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+
+full_name:full_name.value,
+graduation_year:graduation_year.value,
+degree:degree.value,
+company:company.value,
+job_title:job_title.value,
+work_location:work_location.value,
+linkedin:linkedin.value
+
+})
+
+})
+.then(res=>res.json())
+.then(data=>{
+
+if(data.success){
+alert("✅ Profile Updated");
+}else{
+alert("Error saving profile");
+}
+
+});
+ 
+});
+ 
+</script>
+
+</body>
+</html>

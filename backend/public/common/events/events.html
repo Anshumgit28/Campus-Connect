@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Events | Campus Connect</title>
+
+<!-- ✅ FIXED CSS -->
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/common/events/events.css">
+
+</head>
+
+<body class="dashboard-body">
+
+
+<div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <div class="logo-icon">E</div>
+
+        <!-- ✅ FIXED -->
+        <a href="/dashboards/student/dashboard.html">Dashboard</a>
+
+        <!-- ✅ FIXED -->
+        <a href="/common/events/events.html">Events</a>
+
+        <!-- ✅ FIXED -->
+        <a href="/common/resources/resources.html">Resources</a>
+
+    </aside>
+
+
+
+    <div style="width:100%;">
+
+        <header class="navbar">
+
+            <div class="brand">
+                <div class="logo-icon">E</div>
+                <span class="brand-name">EVENTS</span>
+            </div>
+
+            <nav>
+                <!-- ✅ FIXED -->
+                <a href="/dashboards/student/dashboard.html">Dashboard</a>
+
+                <!-- ✅ FIXED -->
+                <a href="/common/events/events.html" class="active-link">Events</a>
+            </nav>
+
+            <a class="logout-btn" href="/logout">Logout</a>
+
+        </header>
+
+
+        <main class="dashboard">
+
+            <section class="greeting">
+                <h1>🎉 Upcoming Events</h1>
+                <p>Explore and register for campus events</p>
+            </section>
+
+            <section class="event-filter">
+
+                <label>Filter by Category:</label>
+
+                <select id="categoryFilter">
+                    <option value="">All Categories</option>
+                    <option value="Academic">🎓 Academic</option>
+                    <option value="Cultural">🎉 Cultural</option>
+                    <option value="Sports">⚽ Sports</option>
+                    <option value="Technical">💻 Technical</option>
+                </select>
+
+            </section>
+
+            <section id="eventList" class="snapshot"></section>
+
+        </main>
+
+    </div>
+
+</div>
+
+
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  loadEvents();
+});
+
+function loadEvents(category = "") {
+  fetch("/events?category=" + category) // ✅ CORRECT
+    .then(res => res.json())
+    .then(events => {
+
+      const container = document.getElementById("eventList");
+      container.innerHTML = "";
+
+      if (!events || events.length === 0) {
+        container.innerHTML = "<p style='color:#6b7280;'>No upcoming events available.</p>";
+        return;
+      }
+
+      events.forEach(event => {
+
+        const card = document.createElement("div");
+        card.className = "snap-card";
+
+        card.innerHTML = `
+          <h3>${event.title}</h3>
+
+          <p>
+            <strong>${event.category}</strong> · 
+            ${event.event_date} · 
+            ${event.event_time}
+          </p>
+
+          <p>${event.description}</p>
+
+          <p><strong>Venue:</strong> ${event.venue}</p>
+
+          <button onclick="viewEvent(${event.id})">
+            View Details →
+          </button>
+        `;
+
+        container.appendChild(card);
+      });
+    });
+}
+
+document.getElementById("categoryFilter")
+.addEventListener("change", e => {
+  loadEvents(e.target.value);
+});
+
+function viewEvent(id){
+  // ✅ FIXED
+  window.location = "/common/events/event-details.html?id=" + id;
+}
+</script>
+
+</body>
+</html>

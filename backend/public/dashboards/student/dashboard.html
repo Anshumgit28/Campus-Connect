@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard | UNI-VERSE</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body class="dashboard-body">
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+
+<div class="logo-icon">U</div>
+
+<a href="/dashboard.html">🏠 Dashboard</a>
+<a href="/dashboards/student/profile.html">👤 Profile</a>
+<a href="/common/events/events.html">🎉 Events</a>
+<a href="/common/resources/resources.html">📚 Resources</a>
+<a href="#">🏫 Clubs</a>
+<a href="/logout">🚪 Logout</a>
+
+</aside>
+
+
+<div>
+
+<!-- MAIN -->
+<main class="dashboard">
+
+<!-- WELCOME -->
+<section class="greeting">
+  <h1 id="greetingText">Welcome 👋</h1>
+  <p>Your academic command center</p>
+</section>
+
+
+
+<!-- UPDATED STUDENT PROFILE CARD -->
+<section class="card student-profile-card">
+
+<h2>🎓 Student Profile</h2>
+
+<p><strong>Name:</strong> <span id="studentName"></span></p>
+<p><strong>PRN:</strong> <span id="studentPRN"></span></p>
+<p><strong>Class:</strong> <span id="studentClass"></span></p>
+<p><strong>Division:</strong> <span id="studentDivision"></span></p>
+<p><strong>Year:</strong> <span id="studentYear"></span></p>
+
+<!-- <small style="color:gray;">
+Click to open profile → Edit your details
+</small> -->
+
+</section>
+
+
+
+<!-- SNAPSHOT -->
+<section class="snapshot">
+  <div class="snap-card">
+    <h3>📢 Notices</h3>
+    <p id="noticeCount">0</p>
+  </div>
+  <div class="snap-card">
+    <h3>🎉 Events</h3>
+    <p id="eventCount">0</p>
+  </div>
+  <div class="snap-card">
+    <h3>📚 Resources</h3>
+    <p id="resourceCount">0</p>
+  </div>
+  <div class="snap-card">
+    <h3>🏫 Clubs</h3>
+    <p id="clubCount">0</p>
+  </div>
+</section>
+
+
+
+<!-- QUICK ACTIONS -->
+<section class="quick-actions">
+
+<h2>⚡ Quick Actions</h2>
+
+<div class="action-grid">
+
+  <div class="action" onclick="location.href='/common/events/events.html'">
+    🎉 Browse Events
+  </div>
+
+<div class="action" onclick="location.href='/common/resources/resources.html'">
+📚 View Resources
+</div>
+
+
+  <div class="action">
+    🏫 Join Clubs
+  </div>
+
+  <div class="action">
+    📝 Submit Assignment
+  </div>
+
+</div>
+</section>
+
+
+
+<!-- ACADEMIC -->
+<section class="academic-section">
+
+  <div class="card">
+    <h2>📊 Attendance</h2>
+    <p id="attendanceValue">Loading...</p>
+
+    <div class="progress-bar">
+      <div id="attendanceBar" class="progress-fill"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>📝 Assignment Deadlines</h2>
+    <ul id="assignmentList"></ul>
+  </div>
+
+</section>
+
+
+
+<!-- PERFORMANCE + MY EVENTS -->
+<section class="main-grid">
+
+<div class="card">
+  <h2>🔥 Your Performance</h2>
+
+  <p style="color:var(--muted); margin-bottom:10px;">
+    Keep attending classes to stay above 75%.
+  </p>
+
+  <div class="progress-bar">
+    <div class="progress-fill" style="width:78%"></div>
+  </div>
+
+</div>
+
+
+<div class="card">
+  <h2>📅 My Registered Events</h2>
+  <ul id="myEvents"></ul>
+</div>
+
+</section>
+
+
+
+<!-- ACTIVITY + UPCOMING -->
+<section class="main-grid">
+
+<div class="card">
+  <h2>Recent Activity</h2>
+  <ul class="activity-list" id="activityList"></ul>
+</div>
+
+<div class="card">
+  <h2>Upcoming Events</h2>
+  <ul class="event-list" id="eventList"></ul>
+</div>
+
+</section>
+
+
+
+<!-- NOTICES -->
+<section class="card" style="margin-bottom:40px;">
+<h2>📢 Latest Notices</h2>
+<ul id="noticePreview"></ul>
+</section>
+
+
+
+<!-- ENGAGEMENT -->
+<section class="engagement">
+  <h2>Your Engagement</h2>
+  <p>You’re more active than <strong>58%</strong> of students</p>
+
+  <div class="progress-bar">
+    <div class="progress-fill"></div>
+  </div>
+</section>
+
+</main>
+
+</div>
+
+</div>
+
+
+<script src="/dashboards/student/dashboard.js"></script>
+ 
+</body> 
+</html>

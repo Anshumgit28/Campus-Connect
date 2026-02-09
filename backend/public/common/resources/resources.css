@@ -1,0 +1,350 @@
+/* =====================================================
+RESOURCES PAGE — PREMIUM MODULE
+Matches dashboard theme perfectly
+No overrides
+===================================================== */
+
+
+/* ===============================
+NAVBAR
+=============================== */
+
+.navbar.resources-navbar{
+
+position:sticky;
+top:0;
+z-index:1000;
+
+background:rgba(255,255,255,.75);
+backdrop-filter:blur(18px);
+
+border-bottom:1px solid var(--border);
+
+box-shadow:0 8px 30px rgba(99,102,241,.10);
+
+}
+
+
+/* nav spacing fix */
+
+.resources-navbar{
+padding:14px 32px;
+}
+
+
+/* links */
+
+.resources-navbar nav a{
+
+color:var(--muted);
+font-weight:600;
+margin-right:18px;
+
+position:relative;
+transition:.25s;
+}
+
+.resources-navbar nav a:hover{
+color:var(--primary);
+}
+
+
+/* active page */
+
+.resources-navbar .active-link{
+
+color:var(--primary);
+font-weight:700;
+}
+
+.resources-navbar .active-link::after{
+
+content:"";
+position:absolute;
+
+left:0;
+bottom:-8px;
+
+width:100%;
+height:2px;
+
+border-radius:4px;
+
+background:linear-gradient(
+90deg,
+var(--primary),
+var(--secondary)
+);
+
+}
+
+
+
+/* ===============================
+MAIN LAYOUT
+=============================== */
+
+.resources-wrapper{
+
+margin-left:230px;
+
+padding:50px 60px;
+
+display:flex;
+flex-direction:column;
+gap:34px;
+
+}
+
+
+/* mobile */
+
+@media(max-width:900px){
+
+.resources-wrapper{
+margin-left:0;
+padding:26px;
+}
+
+}
+
+
+
+/* ===============================
+HERO (Matches Dashboard)
+=============================== */
+
+.greeting{
+
+border-radius:26px;
+
+padding:42px;
+
+background:linear-gradient(
+135deg,
+#6366f1,
+#8b5cf6
+);
+
+box-shadow:0 30px 70px rgba(99,102,241,.35);
+
+}
+
+
+
+/* ===============================
+FILTER BAR
+=============================== */
+
+.resources-controls{
+
+display:flex;
+flex-wrap:wrap;
+gap:18px;
+
+padding:22px;
+
+border-radius:22px;
+
+background:rgba(255,255,255,.85);
+backdrop-filter:blur(10px);
+
+border:1px solid var(--border);
+
+box-shadow:0 15px 40px rgba(0,0,0,.06);
+
+}
+
+
+
+/* inputs */
+
+.resource-input{
+
+padding:14px 18px;
+
+border-radius:14px;
+border:1px solid var(--border);
+
+background:white;
+
+min-width:240px;
+
+font-size:14px;
+
+transition:.25s;
+}
+
+.resource-input:focus{
+
+outline:none;
+border-color:var(--primary);
+
+box-shadow:0 0 0 4px rgba(99,102,241,.12);
+
+}
+
+
+
+/* ===============================
+GRID — MODERN
+=============================== */
+
+.resource-grid{
+
+display:grid;
+
+grid-template-columns:
+repeat(auto-fill, minmax(300px,1fr));
+
+gap:28px;
+
+}
+
+
+
+/* ===============================
+CARD
+=============================== */
+
+.resource-card{
+
+background:linear-gradient(
+180deg,
+#ffffff,
+#f8faff
+);
+
+border-radius:24px;
+
+padding:30px;
+
+border:1px solid var(--border);
+
+box-shadow:0 20px 45px rgba(0,0,0,.05);
+
+transition:.35s;
+
+cursor:pointer;
+}
+
+.resource-card:hover{
+
+transform:translateY(-12px);
+
+box-shadow:0 35px 80px rgba(99,102,241,.18);
+
+}
+
+
+
+/* title */
+
+.resource-title{
+
+font-size:19px;
+font-weight:700;
+color:var(--text);
+
+margin-bottom:12px;
+}
+
+
+
+/* meta */
+
+.resource-meta{
+
+font-size:14px;
+color:var(--muted);
+
+margin-bottom:18px;
+}
+
+
+
+/* downloads */
+
+.resource-downloads{
+
+font-size:13px;
+color:var(--primary);
+
+font-weight:700;
+
+margin-bottom:22px;
+}
+
+
+
+/* buttons */
+
+.resource-actions{
+
+display:flex;
+gap:14px;
+}
+
+
+
+/* download */
+
+.download-btn{
+
+flex:1;
+
+padding:13px;
+
+border:none;
+border-radius:14px;
+
+color:white;
+font-weight:600;
+
+cursor:pointer;
+
+background:linear-gradient(
+135deg,
+var(--primary),
+var(--secondary)
+);
+
+transition:.25s;
+}
+
+.download-btn:hover{
+
+transform:translateY(-4px);
+
+box-shadow:0 16px 30px rgba(99,102,241,.35);
+}
+
+
+
+/* save */
+
+.save-btn{
+
+flex:1;
+
+padding:13px;
+
+border:none;
+border-radius:14px;
+
+font-weight:600;
+
+cursor:pointer;
+
+background:#eef2ff;
+color:var(--primary);
+
+transition:.25s;
+}
+
+.save-btn:hover{
+
+background:#e0e7ff;
+
+transform:translateY(-4px);
+}

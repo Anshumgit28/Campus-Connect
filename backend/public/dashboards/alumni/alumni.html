@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Alumni Directory</title>
+
+<!-- ✅ FIXED CSS PATH -->
+<link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body class="dashboard-body">
+
+<div class="layout">
+
+<aside class="sidebar">
+<div class="logo-icon">A</div>
+
+<!-- ✅ FIXED DASHBOARD PATH -->
+<a href="/dashboards/alumni/alumni-dashboard.html">Dashboard</a>
+
+<!-- ✅ FIXED SELF PATH -->
+<a href="/dashboards/alumni/alumni.html">Alumni</a>
+
+<a href="/logout">Logout</a>
+</aside>
+
+<main class="dashboard">
+
+<section class="greeting">
+<h1>🎓 Alumni Directory</h1>
+<p>Connect with our graduates</p>
+</section>
+
+<section id="alumniList" class="snapshot"></section>
+
+</main>
+</div>
+
+
+<script>
+
+// ✅ THIS IS CORRECT — DO NOT CHANGE
+fetch("/alumni/directory")
+.then(res=>res.json())
+.then(alumni=>{
+
+const container=document.getElementById("alumniList");
+
+if(alumni.length===0){
+container.innerHTML="<p>No alumni available</p>";
+return;
+}
+
+alumni.forEach(a=>{
+
+const card=document.createElement("div");
+card.className="snap-card";
+
+card.innerHTML=`
+<h3>${a.full_name}</h3>
+
+<p>${a.degree} • ${a.graduation_year}</p>
+
+<p><strong>${a.company || ""}</strong></p>
+
+<p>${a.job_title || ""}</p>
+
+<p>${a.work_location || ""}</p>
+
+<a href="${a.linkedin}" target="_blank">
+<button>Connect</button>
+</a>
+`;
+
+container.appendChild(card);
+
+});
+
+});
+
+</script>
+
+</body>
+</html>
+  
