@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Club Dashboard | Campus Connect</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body class="dashboard-body">
+
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="logo-icon">C</div>
+    <a href="/club/">🏠 Dashboard</a>
+    <a href="/club/members">👥 Members</a>
+    <a href="/club/events">🎉 Events</a>
+    <a href="/club/announcements">📢 Announcements</a>
+    <a href="/logout">🚪 Logout</a>
+  </aside>
+
+  <main class="dashboard">
+
+    <!-- GREETING -->
+    <section class="greeting">
+      <h1 id="greetingText">Club Dashboard 👋</h1>
+      <p id="clubNameSub">Loading club details...</p>
+    </section>
+
+    <!-- SNAPSHOT -->
+    <section class="snapshot">
+      <div class="snap-card">
+        <h3>👥 Members</h3>
+        <p id="memberCount">0</p>
+      </div>
+      <div class="snap-card">
+        <h3>⏳ Pending Requests</h3>
+        <p id="pendingCount">0</p>
+      </div>
+      <div class="snap-card">
+        <h3>🎉 Events</h3>
+        <p id="eventCount">0</p>
+      </div>
+      <div class="snap-card">
+        <h3>📢 Announcements</h3>
+        <p id="announcementCount">0</p>
+      </div>
+    </section>
+
+    <!-- QUICK ACTIONS -->
+    <section class="quick-actions card">
+      <h2>⚡ Quick Actions</h2>
+      <div class="action-grid">
+        <div class="action" onclick="location.href='/club/members'">
+          👥 Manage Members
+        </div>
+        <div class="action" onclick="location.href='/club/events'">
+          🎉 Manage Events
+        </div>
+        <div class="action" onclick="location.href='/club/announcements'">
+          📢 Post Announcement
+        </div>
+        <div class="action" onclick="showSection('quickAnnounce')">
+          ✏️ Quick Announce
+        </div>
+      </div>
+    </section>
+
+    <!-- QUICK ANNOUNCE -->
+    <section class="card" id="quickAnnounce" style="display:none; width:100%; flex:none;">
+      <h2>📢 Quick Announcement</h2>
+      <div style="display:flex; flex-direction:column; gap:12px; max-width:500px; margin-top:12px;">
+        <textarea id="qAnnounce" placeholder="Write your announcement..." rows="3"
+          style="padding:12px; border-radius:10px; border:1px solid var(--border); font-family:inherit; resize:vertical;"></textarea>
+        <button onclick="postQuickAnnounce()"
+          style="padding:12px; border-radius:10px; border:none; background:linear-gradient(135deg,var(--primary),var(--secondary)); color:white; font-weight:700; cursor:pointer;">
+          Post Announcement
+        </button>
+        <p id="qAnnounceMsg" style="font-weight:600;"></p>
+      </div>
+    </section>
+
+    <!-- ANALYTICS -->
+    <section class="main-grid">
+
+      <div class="card">
+        <h2>📊 Club Analytics</h2>
+        <div style="display:flex; flex-direction:column; gap:16px; margin-top:12px;">
+          <div>
+            <p style="color:var(--muted); font-size:13px; margin-bottom:6px;">Member Capacity</p>
+            <div style="display:flex; align-items:center; gap:12px;">
+              <p id="analyticsMembers" style="font-size:32px; font-weight:800; color:var(--primary);">0</p>
+              <span style="color:var(--muted);">approved members</span>
+            </div>
+          </div>
+          <div>
+            <p style="color:var(--muted); font-size:13px; margin-bottom:6px;">Pending Approvals</p>
+            <p id="analyticsPending" style="font-size:24px; font-weight:700; color:#f59e0b;">0</p>
+          </div>
+          <div>
+            <p style="color:var(--muted); font-size:13px; margin-bottom:6px;">Upcoming Events</p>
+            <p id="analyticsUpcoming" style="font-size:24px; font-weight:700; color:#22c55e;">0</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>🆕 Recent Members</h2>
+        <ul id="recentMembersList" style="list-style:none; padding:0; margin-top:12px; display:flex; flex-direction:column; gap:10px;"></ul>
+      </div>
+
+    </section>
+
+  </main>
+</div>
+
+<script src="/dashboards/club/club.js"></script>
+</body>
+</html>

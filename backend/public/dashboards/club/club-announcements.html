@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Club Announcements | Campus Connect</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body class="dashboard-body">
+
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="logo-icon">C</div>
+    <a href="/club/">🏠 Dashboard</a>
+    <a href="/club/members">👥 Members</a>
+    <a href="/club/events">🎉 Events</a>
+    <a href="/club/announcements">📢 Announcements</a>
+    <a href="/logout">🚪 Logout</a>
+  </aside>
+
+  <main class="dashboard">
+
+    <section class="greeting">
+      <h1>📢 Club Announcements</h1>
+      <p>Post announcements visible to all club members</p>
+    </section>
+
+    <section class="main-grid">
+
+      <!-- POST FORM -->
+      <div class="card">
+        <h2>✏️ New Announcement</h2>
+        <div style="display:flex; flex-direction:column; gap:12px; margin-top:16px;">
+          <textarea id="announceText" placeholder="Write your announcement here..." rows="5"
+            style="padding:14px; border-radius:12px; border:1px solid var(--border); font-family:inherit; font-size:15px; resize:vertical; transition:.25s;"
+            onfocus="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 4px rgba(99,102,241,.12)';"
+            onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none';"></textarea>
+          <button onclick="postAnnouncement()"
+            style="padding:14px; border-radius:10px; border:none; background:linear-gradient(135deg,var(--primary),var(--secondary)); color:white; font-weight:700; font-size:15px; cursor:pointer; transition:.25s;"
+            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 25px rgba(99,102,241,.3)';"
+            onmouseout="this.style.transform=''; this.style.boxShadow='';">
+            📢 Post Announcement
+          </button>
+          <p id="announceMsg" style="font-weight:600; text-align:center;"></p>
+        </div>
+      </div>
+
+      <!-- POSTED ANNOUNCEMENTS -->
+      <div class="card">
+        <h2>📋 Posted Announcements</h2>
+        <div id="announceList" style="display:flex; flex-direction:column; gap:14px; margin-top:16px; max-height:500px; overflow-y:auto;"></div>
+      </div>
+
+    </section>
+
+  </main>
+</div>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", loadAnnouncements);
+
+function postAnnouncement() {
+  const title = document.getElementById("announceText").value.trim();
+  const msg = document.getElementById("announceMsg");
+
+  if (!title) {
+    msg.style.color = "red"; msg.innerText = "Announcement cannot be empty"; return;
+  }
+
+  fetch("/club/announcements/post", {
+    method: "POST", credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title })
+  }).then(r => r.json()).then(d => {
+    if (d.success) {
+      msg.style.color = "green"; msg.innerText = "✅ Announcement posted!";
+      document.getElementById("announceText").value = "";
+      loadAnnouncements();
+      setTimeout(() => { msg.innerText = ""; }, 3000);
+    } else {
+      msg.style.color = "red"; msg.innerText = d.message || "Failed to post";
+    }
+  });
+}
+
+function loadAnnouncements() {
+  fetch("/club/announcements/list", { credentials: "include" })
+    .then(r => r.json())
+    .then(notices => {
+      const el = document.getElementById("announceList");
+      if (!notices.length) {
+        el.innerHTML = `<p style="color:var(--muted);">No announcements posted yet</p>`;
+        return;
+      }
+      el.innerHTML = notices.map((n, i) => `
+        <div style="padding:18px; border-radius:14px; background:${i % 2 === 0 ? 'var(--bg)' : 'white'};
+          border:1px solid var(--border); border-left:5px solid var(--primary); position:relative;">
+          <p style="font-size:15px; line-height:1.6; color:var(--text);">${n.title}</p>
+          <p style="font-size:12px; color:var(--muted); margin-top:8px;">
+            📅 ${n.created_at ? new Date(n.created_at).toLocaleDateString("en-IN", { day:"2-digit", month:"short", year:"numeric" }) : "—"}
+          </p>
+        </div>
+      `).join("");
+    });
+}
+
+</script>
+</body>
+</html>

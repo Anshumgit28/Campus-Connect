@@ -125,6 +125,8 @@ router.post("/login", loginLimiter, (req, res) => {
 
           /* =====================
              ROLE REDIRECT
+         /* =====================
+            ROLE REDIRECT
           ===================== */
 
           if (user.role === "admin") {
@@ -139,6 +141,20 @@ router.post("/login", loginLimiter, (req, res) => {
 
           console.log("➡ Redirecting to STUDENT dashboard");
           return res.redirect("/dashboard");
+
+          if (user.role === "faculty") {
+            console.log("➡ Redirecting to FACULTY dashboard");
+            return res.redirect("/faculty/");
+          }
+
+          if (user.role === "club_head") {
+            console.log("➡ Redirecting to CLUB HEAD dashboard");
+            return res.redirect("/club/");
+          }
+
+          console.log("➡ Redirecting to STUDENT dashboard");
+          return res.redirect("/dashboard");
+
 
         });
 

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Club Members | Campus Connect</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body class="dashboard-body">
+
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="logo-icon">C</div>
+    <a href="/club/">🏠 Dashboard</a>
+    <a href="/club/members">👥 Members</a>
+    <a href="/club/events">🎉 Events</a>
+    <a href="/club/announcements">📢 Announcements</a>
+    <a href="/logout">🚪 Logout</a>
+  </aside>
+
+  <main class="dashboard">
+
+    <section class="greeting">
+      <h1>👥 Club Members</h1>
+      <p>Approve requests and manage your club members</p>
+    </section>
+
+    <!-- PENDING REQUESTS -->
+    <section class="card" style="width:100%; flex:none;">
+      <h2>⏳ Pending Join Requests <span id="pendingBadge" style="background:#f59e0b; color:white; font-size:13px; padding:2px 10px; border-radius:20px; margin-left:8px;">0</span></h2>
+      <div id="requestsList" style="display:flex; flex-direction:column; gap:12px; margin-top:16px;"></div>
+    </section>
+
+    <!-- APPROVED MEMBERS -->
+    <section class="card" style="width:100%; flex:none;">
+      <h2>✅ Approved Members <span id="memberBadge" style="background:#22c55e; color:white; font-size:13px; padding:2px 10px; border-radius:20px; margin-left:8px;">0</span></h2>
+      <div id="membersList" style="display:flex; flex-direction:column; gap:12px; margin-top:16px;"></div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadRequests();
+  loadMembers();
+});
+
+function loadRequests() {
+  fetch("/club/members/requests", { credentials: "include" })
+    .then(r => r.json())
+    .then(requests => {
+      document.getElementById("pendingBadge").innerText = requests.length;
+      const el = document.getElementById("requestsList");
+      if (!requests.length) {
+        el.innerHTML = `<p style="color:var(--muted);">No pending requests 🎉</p>`;
+        return;
+      }
+      el.innerHTML = requests.map(r => `
+        <div style="padding:16px; border-radius:12px; background:var(--bg); border:1px solid var(--border);
+          display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+          <div>
+            <strong>${r.username}</strong>
+            <p style="font-size:13px; color:var(--muted);">${r.email}</p>
+            <p style="font-size:12px; color:var(--muted);">PRN: ${r.prn || "—"} | Class: ${r.class_name || "—"}</p>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <button onclick="respond(${r.uc_id}, 'approved')"
+              style="padding:8px 18px; border-radius:8px; border:none; background:#22c55e; color:white; font-weight:600; cursor:pointer;">
+              ✅ Approve
+            </button>
+            <button onclick="respond(${r.uc_id}, 'rejected')"
+              style="padding:8px 18px; border-radius:8px; border:none; background:#ef4444; color:white; font-weight:600; cursor:pointer;">
+              ❌ Reject
+            </button>
+          </div>
+        </div>
+      `).join("");
+    });
+}
+
+function loadMembers() {
+  fetch("/club/members/list", { credentials: "include" })
+    .then(r => r.json())
+    .then(members => {
+      document.getElementById("memberBadge").innerText = members.length;
+      const el = document.getElementById("membersList");
+      if (!members.length) {
+        el.innerHTML = `<p style="color:var(--muted);">No members yet</p>`;
+        return;
+      }
+      el.innerHTML = members.map(m => `
+        <div class="student-profile-card card" style="margin:0; padding:16px;
+          display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+          <div>
+            <strong>${m.username}</strong>
+            <p style="font-size:13px; color:var(--muted);">${m.email}</p>
+            <p style="font-size:12px; color:var(--muted);">PRN: ${m.prn || "—"} | Class: ${m.class_name || "—"} | Year: ${m.current_year || "—"}</p>
+          </div>
+          <button onclick="removeMember(${m.uc_id})"
+            style="padding:8px 16px; border-radius:8px; border:1px solid var(--danger); background:white; color:var(--danger); font-weight:600; cursor:pointer;">
+            Remove
+          </button>
+        </div>
+      `).join("");
+    });
+}
+
+function respond(uc_id, action) {
+  fetch("/club/members/respond", {
+    method: "POST", credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ uc_id, action })
+  }).then(r => r.json()).then(d => {
+    if (d.success) { loadRequests(); loadMembers(); }
+    else alert(d.message || "Error");
+  });
+}
+
+function removeMember(uc_id) {
+  if (!confirm("Remove this member from the club?")) return;
+  fetch("/club/members/remove", {
+    method: "POST", credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ uc_id })
+  }).then(r => r.json()).then(d => {
+    if (d.success) loadMembers();
+    else alert("Error removing member");
+  });
+}
+
+</script>
+</body>
+</html>

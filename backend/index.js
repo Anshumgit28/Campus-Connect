@@ -74,6 +74,13 @@ const alumniRoutes = require("./routes/alumni");
 app.use("/alumni", alumniRoutes);
 
 
+// FACULTY MODULE
+const facultyRoutes = require("./routes/faculty");
+app.use("/faculty", facultyRoutes);
+
+// CLUB HEAD MODULE
+const clubRoutes = require("./routes/club");
+app.use("/club", clubRoutes);
 
 /* =========================
    DEFAULT ROUTE

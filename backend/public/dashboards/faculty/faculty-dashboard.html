@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Faculty Dashboard | Campus Connect</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body class="dashboard-body">
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo-icon">F</div>
+    <a href="/faculty/">🏠 Dashboard</a>
+    <a href="/faculty/students">👨‍🎓 Students</a>
+    <a href="/faculty/academics">📚 Academics</a>
+    <a href="/logout">🚪 L ogout</a>
+  </aside>
+
+  <main class="dashboard">
+
+    <!-- GREETING -->
+    <section class="greeting">
+      <h1 id="greetingText">Welcome, Faculty 👋</h1>
+      <p>Manage your students, assignments, exams and grades</p>
+    </section>
+
+    <!-- SNAPSHOT -->
+    <section class="snapshot">
+      <div class="snap-card">
+        <h3>👨‍🎓 Students</h3>
+        <p id="totalStudents">0</p>
+      </div>
+      <div class="snap-card">
+        <h3>📝 Assignments</h3>
+        <p id="totalAssignments">0</p>
+      </div>
+      <div class="snap-card">
+        <h3>🧪 Exams</h3>
+        <p id="totalExams">0</p>
+      </div>
+      <div class="snap-card">
+        <h3>📊 Grades Entered</h3>
+        <p id="totalGrades">0</p>
+      </div>
+    </section>
+
+    <!-- QUICK ACTIONS -->
+    <section class="quick-actions card">
+      <h2>⚡ Quick Actions</h2>
+      <div class="action-grid">
+        <div class="action" onclick="location.href='/faculty/students'">
+          👨‍🎓 View Students
+        </div>
+        <div class="action" onclick="location.href='/faculty/academics'">
+          📚 Manage Academics
+        </div>
+        <div class="action" onclick="showSection('addAssignment')">
+          📝 Add Assignment
+        </div>
+        <div class="action" onclick="showSection('addExam')">
+          🧪 Schedule Exam
+        </div>
+      </div>
+    </section>
+
+    <!-- ADD ASSIGNMENT -->
+    <section class="card" id="addAssignment" style="display:none; width:100%;">
+      <h2>📝 Add Assignment</h2>
+      <div style="display:flex; flex-direction:column; gap:12px; max-width:500px;">
+        <input id="aTitle" placeholder="Assignment Title" style="padding:12px; border-radius:10px; border:1px solid var(--border);">
+        <input id="aSubject" placeholder="Subject" style="padding:12px; border-radius:10px; border:1px solid var(--border);">
+        <textarea id="aDesc" placeholder="Description (optional)" rows="3" style="padding:12px; border-radius:10px; border:1px solid var(--border); font-family:inherit;"></textarea>
+        <input type="date" id="aDueDate" style="padding:12px; border-radius:10px; border:1px solid var(--border);">
+        <button onclick="addAssignment()" style="padding:12px; border-radius:10px; border:none; background:linear-gradient(135deg,var(--primary),var(--secondary)); color:white; font-weight:700; cursor:pointer;">Add Assignment</button>
+        <p id="assignmentMsg" style="color:green; font-weight:600;"></p>
+      </div>
+    </section>
+
+    <!-- ADD EXAM -->
+    <section class="card" id="addExam" style="display:none; width:100%;">
+      <h2>🧪 Schedule Exam</h2>
+      <div style="display:flex; flex-direction:column; gap:12px; max-width:500px;">
+        <input id="eSubject" placeholder="Subject" style="padding:12px; border-radius:10px; border:1px solid var(--border);">
+        <input type="date" id="eDate" style="padding:12px; border-radius:10px; border:1px solid var(--border);">
+        <select id="eType" style="padding:12px; border-radius:10px; border:1px solid var(--border);">
+          <option value="Regular">Regular</option>
+          <option value="Mid-Term">Mid-Term</option>
+          <option value="End-Term">End-Term</option>
+          <option value="Practical">Practical</option>
+        </select>
+        <button onclick="addExam()" style="padding:12px; border-radius:10px; border:none; background:linear-gradient(135deg,var(--primary),var(--secondary)); color:white; font-weight:700; cursor:pointer;">Schedule Exam</button>
+        <p id="examMsg" style="color:green; font-weight:600;"></p>
+      </div>
+    </section>
+
+    <!-- ANALYTICS -->
+    <section class="main-grid">
+      <div class="card">
+        <h2>📊 Attendance Overview</h2>
+        <p style="color:var(--muted); margin-bottom:10px;">Campus-wide average attendance</p>
+        <p id="avgAttendance" style="font-size:36px; font-weight:800; color:var(--primary);">0%</p>
+        <div class="progress-bar" style="margin-top:12px;">
+          <div class="progress-fill" id="attendanceBar" style="width:0%;"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>📈 Grade Distribution</h2>
+        <div id="gradeDistribution" style="display:flex; gap:12px; flex-wrap:wrap; margin-top:10px;"></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="/dashboards/faculty/faculty.js"></script>
+</body>
+</html>

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Students | Faculty Dashboard</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body class="dashboard-body">
+
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="logo-icon">F</div>
+    <a href="/faculty/">🏠 Dashboard</a>
+    <a href="/faculty/students">👨‍🎓 Students</a>
+    <a href="/faculty/academics">📚 Academics</a>
+    <a href="/logout">🚪 Logout</a>
+  </aside>
+
+  <main class="dashboard">
+
+    <section class="greeting">
+      <h1>👨‍🎓 Student Management</h1>
+      <p>View students, update attendance and enter grades</p>
+    </section>
+
+    <!-- TABS -->
+    <section class="card" style="width:100%; flex:none;">
+      <div style="display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap;">
+        <button onclick="showTab('listTab')" class="tab-btn active-tab" id="btn-listTab"
+          style="padding:10px 20px; border-radius:10px; border:none; background:var(--primary); color:white; cursor:pointer; font-weight:600;">
+          📋 All Students
+        </button>
+        <button onclick="showTab('perfTab')" class="tab-btn" id="btn-perfTab"
+          style="padding:10px 20px; border-radius:10px; border:1px solid var(--border); background:white; cursor:pointer; font-weight:600;">
+          📊 Performance
+        </button>
+        <button onclick="showTab('attendTab')" class="tab-btn" id="btn-attendTab"
+          style="padding:10px 20px; border-radius:10px; border:1px solid var(--border); background:white; cursor:pointer; font-weight:600;">
+          ✅ Update Attendance
+        </button>
+        <button onclick="showTab('gradeTab')" class="tab-btn" id="btn-gradeTab"
+          style="padding:10px 20px; border-radius:10px; border:1px solid var(--border); background:white; cursor:pointer; font-weight:600;">
+          🎓 Enter Grade
+        </button>
+      </div>
+
+      <!-- ALL STUDENTS -->
+      <div id="listTab">
+        <input id="searchStudent" placeholder="🔍 Search by name, PRN or class..." 
+          style="padding:12px; border-radius:10px; border:1px solid var(--border); width:100%; max-width:400px; margin-bottom:16px;"
+          oninput="filterStudents()">
+        <div id="studentList" style="display:flex; flex-direction:column; gap:12px;"></div>
+      </div>
+
+      <!-- PERFORMANCE -->
+      <div id="perfTab" style="display:none;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+          <thead>
+            <tr style="background:var(--bg);">
+              <th style="padding:12px; text-align:left; border-bottom:2px solid var(--border);">Student</th>
+              <th style="padding:12px; text-align:left; border-bottom:2px solid var(--border);">PRN</th>
+              <th style="padding:12px; text-align:left; border-bottom:2px solid var(--border);">Class</th>
+              <th style="padding:12px; text-align:left; border-bottom:2px solid var(--border);">GPA</th>
+              <th style="padding:12px; text-align:left; border-bottom:2px solid var(--border);">Attendance %</th>
+            </tr>
+          </thead>
+          <tbody id="perfTableBody"></tbody>
+        </table>
+      </div>
+
+      <!-- UPDATE ATTENDANCE -->
+      <div id="attendTab" style="display:none;">
+        <div style="display:flex; flex-direction:column; gap:12px; max-width:460px;">
+          <select id="attStudent" style="padding:12px; border-radius:10px; border:1px solid var(--border);">
+            <option value="">Select Student</option>
+          </select>
+          <input id="attSubject" placeholder="Subject" style="padding:12px; border-radius:10px; border:1px solid var(--border);">
+          <input type="number" id="attAttended" placeholder="Classes Attended" min="0" style="padding:12px; border-radius:10px; border:1px solid var(--border);">
+          <input type="number" id="attTotal" placeholder="Total Classes" min="1" style="padding:12px; border-radius:10px; border:1px solid var(--border);">
+          <input type="date" id="attDate" style="padding:12px; border-radius:10px; border:1px solid var(--border);">
+          <button onclick="updateAttendance()"
+            style="padding:12px; border-radius:10px; border:none; background:linear-gradient(135deg,var(--primary),var(--secondary)); color:white; font-weight:700; cursor:pointer;">
+            Update Attendance
+          </button>
+          <p id="attendMsg" style="color:green; font-weight:600;"></p>
+        </div>
+      </div>
+
+      <!-- ENTER GRADE -->
+      <div id="gradeTab" style="display:none;">
+        <div style="display:flex; flex-direction:column; gap:12px; max-width:460px;">
+          <select id="gradeStudent" style="padding:12px; border-radius:10px; border:1px solid var(--border);">
+            <option value="">Select Student</option>
+          </select>
+          <input id="gradeSubject" placeholder="Subject" style="padding:12px; border-radius:10px; border:1px solid var(--border);">
+          <select id="gradeValue" style="padding:12px; border-radius:10px; border:1px solid var(--border);">
+            <option value="">Select Grade</option>
+            <option value="A">A — Excellent</option>
+            <option value="B">B — Good</option>
+            <option value="C">C — Average</option>
+            <option value="D">D — Below Average</option>
+            <option value="F">F — Fail</option>
+          </select>
+          <button onclick="enterGrade()"
+            style="padding:12px; border-radius:10px; border:none; background:linear-gradient(135deg,var(--primary),var(--secondary)); color:white; font-weight:700; cursor:pointer;">
+            Save Grade
+          </button>
+          <p id="gradeMsg" style="color:green; font-weight:600;"></p>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+</div>
+
+<script src="/dashboards/faculty/faculty.js"></script>
+<script>
+// Page-specific init
+document.addEventListener("DOMContentLoaded", () => {
+  loadStudents();
+  loadPerformance();
+});
+
+function showTab(tab) {
+  ["listTab", "perfTab", "attendTab", "gradeTab"].forEach(t => {
+    document.getElementById(t).style.display = "none";
+    document.getElementById("btn-" + t).style.background = "white";
+    document.getElementById("btn-" + t).style.border = "1px solid var(--border)";
+    document.getElementById("btn-" + t).style.color = "var(--text)";
+  });
+  document.getElementById(tab).style.display = "block";
+  document.getElementById("btn-" + tab).style.background = "var(--primary)";
+  document.getElementById("btn-" + tab).style.border = "none";
+  document.getElementById("btn-" + tab).style.color = "white";
+}
+
+let allStudents = [];
+
+function loadStudents() {
+  fetch("/faculty/students/list", { credentials: "include" })
+    .then(r => r.json())
+    .then(students => {
+      allStudents = students;
+      renderStudentList(students);
+      populateStudentDropdowns(students);
+    });
+}
+
+function renderStudentList(students) {
+  const el = document.getElementById("studentList");
+  if (!students.length) { el.innerHTML = "<p>No students found</p>"; return; }
+  el.innerHTML = students.map(s => `
+    <div class="student-profile-card card" style="margin:0; padding:18px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <div>
+          <strong style="font-size:16px;">${s.username}</strong>
+          <p style="color:var(--muted); font-size:13px; margin-top:4px;">${s.email}</p>
+        </div>
+        <div style="display:flex; gap:20px; font-size:13px; color:var(--muted);">
+          <span>PRN: <strong>${s.prn || "—"}</strong></span>
+          <span>Class: <strong>${s.class_name || "—"}</strong></span>
+          <span>Year: <strong>${s.current_year || "—"}</strong></span>
+        </div>
+      </div>
+    </div>
+  `).join("");
+}
+
+function filterStudents() {
+  const q = document.getElementById("searchStudent").value.toLowerCase();
+  const filtered = allStudents.filter(s =>
+    (s.username || "").toLowerCase().includes(q) ||
+    (s.prn || "").toLowerCase().includes(q) ||
+    (s.class_name || "").toLowerCase().includes(q)
+  );
+  renderStudentList(filtered);
+}
+
+function populateStudentDropdowns(students) {
+  const opts = students.map(s => `<option value="${s.id}">${s.username} (${s.prn || s.id})</option>`).join("");
+  document.getElementById("attStudent").innerHTML = `<option value="">Select Student</option>${opts}`;
+  document.getElementById("gradeStudent").innerHTML = `<option value="">Select Student</option>${opts}`;
+}
+
+function loadPerformance() {
+  fetch("/faculty/students/performance", { credentials: "include" })
+    .then(r => r.json())
+    .then(rows => {
+      const tbody = document.getElementById("perfTableBody");
+      if (!rows.length) { tbody.innerHTML = `<tr><td colspan="5" style="padding:12px;color:var(--muted);">No data</td></tr>`; return; }
+      tbody.innerHTML = rows.map(r => `
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:12px;">${r.username}</td>
+          <td style="padding:12px;">${r.prn || "—"}</td>
+          <td style="padding:12px;">${r.class_name || "—"}</td>
+          <td style="padding:12px;"><strong style="color:var(--primary);">${r.gpa || "N/A"}</strong></td>
+          <td style="padding:12px;">
+            <span style="font-weight:700; color:${(r.attendance||0) >= 75 ? '#22c55e' : '#ef4444'};">
+              ${r.attendance || 0}%
+            </span>
+          </td>
+        </tr>
+      `).join("");
+    });
+}
+
+function updateAttendance() {
+  const user_id = document.getElementById("attStudent").value;
+  const attended = document.getElementById("attAttended").value;
+  const total = document.getElementById("attTotal").value;
+  const subject = document.getElementById("attSubject").value;
+  const date = document.getElementById("attDate").value;
+
+  if (!user_id || !attended || !total) {
+    document.getElementById("attendMsg").style.color = "red";
+    document.getElementById("attendMsg").innerText = "Please fill all fields";
+    return;
+  }
+
+  fetch("/faculty/attendance/update", {
+    method: "POST", credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ user_id, attended: parseInt(attended), total: parseInt(total), subject, date })
+  }).then(r => r.json()).then(d => {
+    const msg = document.getElementById("attendMsg");
+    msg.style.color = d.success ? "green" : "red";
+    msg.innerText = d.success ? "✅ Attendance updated!" : (d.message || "Failed");
+  });
+}
+
+function enterGrade() {
+  const user_id = document.getElementById("gradeStudent").value;
+  const subject = document.getElementById("gradeSubject").value;
+  const grade = document.getElementById("gradeValue").value;
+
+  if (!user_id || !subject || !grade) {
+    document.getElementById("gradeMsg").style.color = "red";
+    document.getElementById("gradeMsg").innerText = "Please fill all fields";
+    return;
+  }
+
+  fetch("/faculty/grade/add", {
+    method: "POST", credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ user_id, subject, grade })
+  }).then(r => r.json()).then(d => {
+    const msg = document.getElementById("gradeMsg");
+    msg.style.color = d.success ? "green" : "red";
+    msg.innerText = d.success ? "✅ Grade saved!" : (d.message || "Failed");
+  });
+}
+</script>
+
+</body>
+</html>
