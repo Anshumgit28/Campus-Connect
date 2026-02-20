@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Users | Admin Panel</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="dashboard-body">
+<div class="layout">
+  <aside class="sidebar">
+    <div class="logo-icon">A</div>
+    <a href="/admin">🏠 Dashboard</a>
+    <a href="/admin/users">👥 Users</a>
+    <a href="/admin/events">🎉 Events</a>
+    <a href="/admin/analytics">📊 Analytics</a>
+    <a href="/logout">🚪 Logout</a>
+  </aside>
+
+  <main class="dashboard">
+    <section class="greeting">
+      <h1>👥 User Management</h1>
+      <p>View, edit roles and manage all users</p>
+    </section>
+
+    <section class="card" style="width:100%; flex:none;">
+      <!-- SEARCH + FILTER -->
+      <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px; align-items:center;">
+        <input id="searchUser" placeholder="🔍 Search name, email or PRN..." 
+          oninput="filterUsers()"
+          style="padding:10px 14px; border-radius:10px; border:1px solid var(--border); flex:1; min-width:180px;">
+        <select id="roleFilter" onchange="filterUsers()" 
+          style="padding:10px 14px; border-radius:10px; border:1px solid var(--border);">
+          <option value="">All Roles</option>
+          <option value="student">Student</option>
+          <option value="faculty">Faculty</option>
+          <option value="alumni">Alumni</option>
+          <option value="club_head">Club Head</option>
+          <option value="admin">Admin</option>
+        </select>
+        <span id="userCountLabel" style="color:var(--muted); font-size:14px;"></span>
+      </div>
+
+      <!-- STATUS MESSAGE -->
+      <p id="statusMessage" style="min-height:20px; font-weight:600; margin-bottom:10px;"></p>
+
+      <!-- TABLE -->
+      <div style="overflow-x:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+          <thead>
+            <tr style="background:var(--bg);">
+              <th style="padding:12px; text-align:left; border-bottom:2px solid var(--border);">Name</th>
+              <th style="padding:12px; text-align:left; border-bottom:2px solid var(--border);">Email</th>
+              <th style="padding:12px; text-align:left; border-bottom:2px solid var(--border);">Role</th>
+              <th style="padding:12px; text-align:left; border-bottom:2px solid var(--border);">Status</th>
+              <th style="padding:12px; text-align:left; border-bottom:2px solid var(--border);">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="userTableBody">
+            <tr>
+              <td colspan="5" style="padding:20px; text-align:center; color:var(--muted);">
+                Loading users...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+let allUsers = [];
+
+document.addEventListener("DOMContentLoaded", loadUsers);
+
+function loadUsers() {
+  fetch("/admin/users/list", { credentials: "include" })
+    .then(r => r.json())
+    .then(users => {
+      allUsers = users;
+      renderUsers(users);
+    })
+    .catch(err => {
+      console.error("Load users error:", err);
+      showMessage("Failed to load users", true);
+    });
+}
+
+function renderUsers(users) {
+  document.getElementById("userCountLabel").innerText = `${users.length} users`;
+  const tbody = document.getElementById("userTableBody");
+  
+  if (!users.length) { 
+    tbody.innerHTML = `<tr><td colspan="5" style="padding:20px; text-align:center; color:var(--muted);">No users found</td></tr>`; 
+    return; 
+  }
+  
+  tbody.innerHTML = users.map(u => `
+    <tr style="border-bottom:1px solid var(--border);" id="row-${u.id}">
+      <td style="padding:12px;">
+        <strong>${escapeHtml(u.username)}</strong>
+        ${u.prn ? `<p style="font-size:12px; color:var(--muted);">PRN: ${escapeHtml(u.prn)}</p>` : ""}
+        ${u.class_name ? `<p style="font-size:12px; color:var(--muted);">${escapeHtml(u.class_name)}</p>` : ""}
+      </td>
+      <td style="padding:12px; color:var(--muted); font-size:13px;">${escapeHtml(u.email)}</td>
+      <td style="padding:12px;">
+        <select onchange="changeRole(${u.id}, this.value)"
+          style="padding:6px 10px; border-radius:8px; border:1px solid var(--border); font-size:13px;">
+          ${["student", "faculty", "alumni", "club_head", "admin"].map(r =>
+            `<option value="${r}" ${u.role===r?"selected":""}>${r}</option>`
+          ).join("")}
+        </select>
+      </td>
+      <td style="padding:12px;">
+        <span id="status-badge-${u.id}"
+          style="padding:4px 10px; border-radius:20px; font-size:12px; font-weight:600;
+                 background:${u.is_active ? '#dcfce7':'#fee2e2'}; 
+                 color:${u.is_active?'#16a34a':'#dc2626'};">
+          ${u.is_active ? "Active" : "Inactive"}
+        </span>
+      </td>
+      <td style="padding:12px;">
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button id="toggle-btn-${u.id}" onclick="toggleUser(${u.id})"
+            style="padding:6px 12px; border-radius:8px; border:1px solid var(--border); 
+                   cursor:pointer; font-size:12px; background:white;">
+            ${u.is_active ? "Deactivate" : "Activate"}
+          </button>
+          <button onclick="deleteUser(${u.id})"
+            style="padding:6px 12px; border-radius:8px; border:none; 
+                   background:#fee2e2; color:#dc2626; cursor:pointer; 
+                   font-size:12px; font-weight:600;">
+            Delete
+          </button>
+        </div>
+      </td>
+    </tr>
+  `).join("");
+}
+
+function filterUsers() {
+  const q = document.getElementById("searchUser").value.toLowerCase();
+  const role = document.getElementById("roleFilter").value;
+  
+  const filtered = allUsers.filter(u =>
+    (!q || 
+      (u.username||"").toLowerCase().includes(q) || 
+      (u.email||"").toLowerCase().includes(q) || 
+      (u.prn||"").toLowerCase().includes(q) ||
+      (u.class_name||"").toLowerCase().includes(q)
+    ) &&
+    (!role || u.role === role)
+  );
+  
+  renderUsers(filtered);
+}
+
+function changeRole(user_id, role) {
+  fetch("/admin/users/role", {
+    method: "POST", 
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ user_id, role })
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.success) {
+      const u = allUsers.find(x => x.id === user_id);
+      if (u) u.role = role;
+      showMessage(`✅ Role updated to "${role}"`, false);
+    } else {
+      showMessage("❌ " + (d.message || "Failed to update role"), true);
+    }
+  })
+  .catch(err => {
+    console.error("Change role error:", err);
+    showMessage("❌ Network error", true);
+  });
+}
+
+// ✅ FIXED: Toggle now updates UI state without reload
+function toggleUser(user_id) {
+  fetch("/admin/users/toggle", {
+    method: "POST", 
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ user_id })
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.success) {
+      // Update local state
+      const user = allUsers.find(u => u.id === user_id);
+      if (user) {
+        user.is_active = d.is_active;
+        
+        // Update badge
+        const badge = document.getElementById(`status-badge-${user_id}`);
+        if (badge) {
+          badge.style.background = d.is_active ? '#dcfce7' : '#fee2e2';
+          badge.style.color = d.is_active ? '#16a34a' : '#dc2626';
+          badge.innerText = d.is_active ? "Active" : "Inactive";
+        }
+        
+        // Update button text
+        const btn = document.getElementById(`toggle-btn-${user_id}`);
+        if (btn) {
+          btn.innerText = d.is_active ? "Deactivate" : "Activate";
+        }
+        
+        showMessage(`✅ User ${d.is_active ? 'activated' : 'deactivated'}`, false);
+      }
+    } else {
+      showMessage("❌ " + (d.message || "Failed to toggle status"), true);
+    }
+  })
+  .catch(err => {
+    console.error("Toggle error:", err);
+    showMessage("❌ Network error", true);
+  });
+}
+
+function deleteUser(user_id) {
+  if (!confirm("Permanently delete this user and all their data? This cannot be undone.")) {
+    return;
+  }
+  
+  fetch("/admin/users/delete", {
+    method: "POST", 
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ user_id })
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.success) {
+      // Remove from local array
+      allUsers = allUsers.filter(u => u.id !== user_id);
+      
+      // Remove row from table
+      const row = document.getElementById(`row-${user_id}`);
+      if (row) row.remove();
+      
+      // Update count
+      filterUsers();
+      
+      showMessage("✅ User deleted", false);
+    } else {
+      showMessage("❌ " + (d.message || "Failed to delete user"), true);
+    }
+  })
+  .catch(err => {
+    console.error("Delete error:", err);
+    showMessage("❌ Network error", true);
+  });
+}
+
+function showMessage(msg, isError) {
+  const el = document.getElementById("statusMessage");
+  el.style.color = isError ? "red" : "green";
+  el.innerText = msg;
+  setTimeout(() => { el.innerText = ""; }, 3000);
+}
+
+function escapeHtml(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+</script>
+</body>
+</html>

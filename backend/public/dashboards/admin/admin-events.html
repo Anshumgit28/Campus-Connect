@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Events | Admin Panel</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="dashboard-body">
+<div class="layout">
+  <aside class="sidebar">
+    <div class="logo-icon">A</div>
+    <a href="/admin">🏠 Dashboard</a>
+    <a href="/admin/users">👥 Users</a>
+    <a href="/admin/events">🎉 Events</a>
+    <a href="/admin/analytics">📊 Analytics</a>
+    <a href="/logout">🚪 Logout</a>
+  </aside>
+  <main class="dashboard">
+    <section class="greeting">
+      <h1>🎉 Event Management</h1>
+      <p>Create, view and manage all campus events</p>
+    </section>
+
+    <section class="main-grid">
+      <!-- CREATE EVENT -->
+      <div class="card">
+        <h2>➕ Create Event</h2>
+        <div style="display:flex; flex-direction:column; gap:12px; margin-top:14px;">
+          <input id="eTitle" placeholder="Event Title *" style="padding:12px; border-radius:10px; border:1px solid var(--border);">
+          <textarea id="eDesc" placeholder="Description" rows="2"
+            style="padding:12px; border-radius:10px; border:1px solid var(--border); font-family:inherit; resize:vertical;"></textarea>
+          <select id="eCategory" style="padding:12px; border-radius:10px; border:1px solid var(--border);">
+            <option value="Academic">🎓 Academic</option>
+            <option value="Cultural">🎉 Cultural</option>
+            <option value="Sports">⚽ Sports</option>
+            <option value="Technical">💻 Technical</option>
+          </select>
+          <label style="color:var(--muted); font-size:12px; margin-bottom:-6px;">Event Date *</label>
+          <input type="date" id="eDate" style="padding:12px; border-radius:10px; border:1px solid var(--border);">
+          <input type="time" id="eTime" style="padding:12px; border-radius:10px; border:1px solid var(--border);">
+          <input id="eVenue" placeholder="Venue" style="padding:12px; border-radius:10px; border:1px solid var(--border);">
+          <input id="eOrganizer" placeholder="Organizer" style="padding:12px; border-radius:10px; border:1px solid var(--border);">
+          <input type="number" id="eSeats" placeholder="Seats Available" min="1"
+            style="padding:12px; border-radius:10px; border:1px solid var(--border);">
+          <button onclick="createEvent()"
+            style="padding:12px; border-radius:10px; border:none;
+              background:linear-gradient(135deg,var(--primary),var(--secondary));
+              color:white; font-weight:700; cursor:pointer; font-size:14px;">
+            Create Event
+          </button>
+          <p id="eventMsg" style="font-weight:600; text-align:center; min-height:20px;"></p>
+        </div>
+      </div>
+
+      <!-- EVENT LIST -->
+      <div class="card">
+        <h2>📋 All Events</h2>
+        <div id="eventList"
+          style="display:flex; flex-direction:column; gap:10px; margin-top:14px; max-height:600px; overflow-y:auto;">
+          <p style="color:var(--muted);">Loading events...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- REGISTRATIONS PANEL -->
+    <section class="card" id="regPanel" style="display:none; flex:none; width:100%;">
+      <h2>👥 Registrations: <span id="regTitle" style="color:var(--primary);"></span></h2>
+      <button onclick="document.getElementById('regPanel').style.display='none'"
+        style="margin-bottom:14px; padding:7px 14px; border-radius:8px;
+          border:1px solid var(--border); cursor:pointer; background:white;">
+        ← Back to Events
+      </button>
+      <p id="regCount" style="color:var(--muted); font-size:13px; margin-bottom:10px;"></p>
+      <div id="regList" style="display:flex; flex-wrap:wrap; gap:10px;"></div>
+    </section>
+  </main>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", loadEvents);
+
+function createEvent() {
+  const title = document.getElementById("eTitle").value.trim();
+  const event_date = document.getElementById("eDate").value;
+  const msg = document.getElementById("eventMsg");
+
+  if (!title || !event_date) {
+    msg.style.color = "red";
+    msg.innerText = "⚠️ Title and date are required";
+    return;
+  }
+
+  const body = {
+    title,
+    description: document.getElementById("eDesc").value.trim(),
+    category: document.getElementById("eCategory").value,
+    event_date,
+    event_time: document.getElementById("eTime").value,
+    venue: document.getElementById("eVenue").value.trim(),
+    organizer: document.getElementById("eOrganizer").value.trim(),
+    seats: document.getElementById("eSeats").value
+  };
+
+  fetch("/admin/event", {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  })
+  .then(r => r.json())
+  .then(d => {
+    msg.style.color = d.success ? "green" : "red";
+    msg.innerText = d.success ? "✅ Event created!" : ("❌ " + (d.message || "Failed"));
+    if (d.success) {
+      // Clear form
+      ["eTitle","eDesc","eDate","eTime","eVenue","eOrganizer","eSeats"].forEach(id => {
+        document.getElementById(id).value = "";
+      });
+      loadEvents();
+      setTimeout(() => { msg.innerText = ""; }, 3000);
+    }
+  })
+  .catch(() => { msg.style.color = "red"; msg.innerText = "❌ Network error"; });
+}
+
+function loadEvents() {
+  fetch("/admin/events/list", { credentials: "include" })
+    .then(r => r.json())
+    .then(events => {
+      const el = document.getElementById("eventList");
+      if (!events.length) {
+        el.innerHTML = "<p style='color:var(--muted);'>No events found. Create one!</p>";
+        return;
+      }
+      el.innerHTML = events.map(e => `
+        <div style="padding:14px; border-radius:12px; background:var(--bg);
+          border-left:4px solid var(--primary);">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start;
+            gap:8px; flex-wrap:wrap;">
+            <div style="flex:1; min-width:0;">
+              <strong style="font-size:15px;">${e.title}</strong>
+              <p style="font-size:13px; color:var(--muted); margin-top:4px;">
+                📅 ${e.event_date ? e.event_date.slice(0,10) : "—"}
+                ${e.event_time ? " · " + e.event_time.slice(0,5) : ""}
+                ${e.venue ? " · 📍 " + e.venue : ""}
+              </p>
+              <p style="font-size:12px; color:var(--muted); margin-top:2px;">
+                ${e.category || "General"} · 
+                <strong>👥 ${e.reg_count || 0} registered</strong>
+                ${e.seats ? " / " + e.seats + " seats" : ""}
+              </p>
+            </div>
+            <div style="display:flex; gap:8px; flex-shrink:0;">
+              <button onclick="viewRegs(${e.id}, '${(e.title||"").replace(/'/g, "\\'")}')"
+                style="padding:7px 13px; border-radius:8px; border:none;
+                  background:var(--primary); color:white; font-size:12px;
+                  cursor:pointer; font-weight:600; white-space:nowrap;">
+                👥 Registrations
+              </button>
+              <button onclick="deleteEvent(${e.id})"
+                style="padding:7px 13px; border-radius:8px; border:none;
+                  background:#fee2e2; color:#dc2626; font-size:12px;
+                  cursor:pointer; font-weight:600;">
+                🗑 Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join("");
+    })
+    .catch(() => {
+      document.getElementById("eventList").innerHTML =
+        "<p style='color:red;'>Failed to load events</p>";
+    });
+}
+
+function viewRegs(eventId, title) {
+  document.getElementById("regTitle").innerText = title;
+  document.getElementById("regList").innerHTML = "<p style='color:var(--muted);'>Loading...</p>";
+  document.getElementById("regCount").innerText = "";
+  document.getElementById("regPanel").style.display = "block";
+  document.getElementById("regPanel").scrollIntoView({ behavior: "smooth" });
+
+  fetch(`/admin/event-registrations/${eventId}`, { credentials: "include" })
+    .then(r => r.json())
+    .then(regs => {
+      document.getElementById("regCount").innerText =
+        `${regs.length} registration${regs.length !== 1 ? "s" : ""}`;
+      const el = document.getElementById("regList");
+      if (!regs.length) {
+        el.innerHTML = "<p style='color:var(--muted);'>No registrations yet</p>";
+        return;
+      }
+      el.innerHTML = regs.map(r => `
+        <div style="padding:12px 16px; border-radius:10px; background:var(--bg);
+          border:1px solid var(--border); min-width:200px;">
+          <strong style="font-size:14px;">${r.username || "—"}</strong>
+          <p style="font-size:12px; color:var(--muted); margin-top:4px;">${r.email || "—"}</p>
+          ${r.prn ? `<p style="font-size:12px; color:var(--muted);">PRN: ${r.prn}</p>` : ""}
+          ${r.class_name ? `<p style="font-size:12px; color:var(--muted);">${r.class_name}</p>` : ""}
+        </div>
+      `).join("");
+    })
+    .catch(() => {
+      document.getElementById("regList").innerHTML =
+        "<p style='color:red;'>Failed to load registrations</p>";
+    });
+}
+
+function deleteEvent(event_id) {
+  if (!confirm("Delete this event and all its registrations? This cannot be undone.")) return;
+  fetch("/admin/event/delete", {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ event_id })
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.success) {
+      loadEvents();
+      // Hide reg panel if it was showing this event
+      document.getElementById("regPanel").style.display = "none";
+    } else {
+      alert("Failed to delete event: " + (d.message || "Unknown error"));
+    }
+  })
+  .catch(() => alert("Network error deleting event"));
+}
+</script>
+</body>
+</html>

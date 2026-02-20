@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Alumni Profile | Campus Connect</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="dashboard-body">
+<div class="layout">
+  <aside class="sidebar">
+    <div class="logo-icon">AL</div>
+    <a href="/alumni/dashboard">🏠 Dashboard</a>
+    <a href="/alumni/profile-page">👤 My Profile</a>
+    <a href="/alumni/directory-page">📋 Directory</a>
+    <a href="/common/events/events.html">🎉 Events</a>
+    <a href="/logout">🚪 Logout</a>
+  </aside>
+
+  <main class="dashboard">
+    <section class="greeting">
+      <h1>👤 Alumni Profile</h1>
+      <p>Keep your professional profile updated</p>
+    </section>
+
+    <div class="card" style="max-width:540px; flex:none; width:100%;">
+      <h2 style="margin-bottom:20px;">Edit Profile</h2>
+      <label style="color:var(--muted); font-size:13px;">Full Name</label>
+      <input id="full_name" placeholder="Full Name" style="width:100%; padding:12px; border-radius:10px; border:1px solid var(--border); margin-bottom:14px;">
+      <label style="color:var(--muted); font-size:13px;">Graduation Year</label>
+      <input type="number" id="graduation_year" placeholder="e.g. 2022" style="width:100%; padding:12px; border-radius:10px; border:1px solid var(--border); margin-bottom:14px;">
+      <label style="color:var(--muted); font-size:13px;">Degree</label>
+      <input id="degree" placeholder="e.g. B.Tech IT" style="width:100%; padding:12px; border-radius:10px; border:1px solid var(--border); margin-bottom:14px;">
+      <label style="color:var(--muted); font-size:13px;">Company</label>
+      <input id="company" placeholder="Current Company" style="width:100%; padding:12px; border-radius:10px; border:1px solid var(--border); margin-bottom:14px;">
+      <label style="color:var(--muted); font-size:13px;">Job Title</label>
+      <input id="job_title" placeholder="Job Title" style="width:100%; padding:12px; border-radius:10px; border:1px solid var(--border); margin-bottom:14px;">
+      <label style="color:var(--muted); font-size:13px;">Work Location</label>
+      <input id="work_location" placeholder="City, Country" style="width:100%; padding:12px; border-radius:10px; border:1px solid var(--border); margin-bottom:14px;">
+      <label style="color:var(--muted); font-size:13px;">LinkedIn URL</label>
+      <input id="linkedin" placeholder="https://linkedin.com/in/yourprofile" style="width:100%; padding:12px; border-radius:10px; border:1px solid var(--border); margin-bottom:20px;">
+      <button id="saveBtn">💾 Update Profile</button>
+      <p id="saveMsg" style="margin-top:10px; font-weight:600; text-align:center;"></p>
+    </div>
+  </main>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  fetch("/alumni/profile", { credentials: "include" })
+    .then(r => r.json())
+    .then(data => {
+      if (!data) return;
+      ["full_name","graduation_year","degree","company","job_title","work_location","linkedin"].forEach(key => {
+        const el = document.getElementById(key);
+        if (el && data[key]) el.value = data[key];
+      });
+    });
+
+  document.getElementById("saveBtn").addEventListener("click", async () => {
+    const body = {};
+    ["full_name","graduation_year","degree","company","job_title","work_location","linkedin"].forEach(k => {
+      body[k] = document.getElementById(k).value;
+    });
+    const res = await fetch("/alumni/profile/update", {
+      method: "POST", credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    const d = await res.json();
+    const msg = document.getElementById("saveMsg");
+    msg.style.color = d.success ? "green" : "red";
+    msg.innerText = d.success ? "✅ Profile updated!" : "❌ Failed to save";
+  });
+});
+</script>
+</body>
+</html>

@@ -1,203 +1,186 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Dashboard | UNI-VERSE</title>
-<link rel="stylesheet" href="/css/style.css">
+  <meta charset="UTF-8">
+  <title>Student Dashboard | Campus Connect</title>
+  <link rel="stylesheet" href="/css/style.css">
 </head>
-
 <body class="dashboard-body">
-
 <div class="layout">
 
-<!-- SIDEBAR -->
-<aside class="sidebar">
+  <aside class="sidebar">
+    <div class="logo-icon">S</div>
+    <a href="/dashboard">🏠 Dashboard</a>
+    <a href="/dashboards/student/profile.html">👤 Profile</a>
+    <a href="/common/events/events.html">🎉 Events</a>
+    <a href="/common/resources/resources.html">📚 Resources</a>
+    <a href="/dashboards/student/academics.html">📊 Academics</a>
+    <a href="/dashboards/student/notifications.html">
+      🔔 Notifications 
+      <span id="notifBadge" style="background:#ef4444; color:white; font-size:11px; 
+        padding:2px 6px; border-radius:10px; display:none;">0</span>
+    </a>
+    <a href="/logout">🚪 Logout</a>
+  </aside>
 
-<div class="logo-icon">U</div>
+  <main class="dashboard">
 
-<a href="/dashboard.html">🏠 Dashboard</a>
-<a href="/dashboards/student/profile.html">👤 Profile</a>
-<a href="/common/events/events.html">🎉 Events</a>
-<a href="/common/resources/resources.html">📚 Resources</a>
-<a href="#">🏫 Clubs</a>
-<a href="/logout">🚪 Logout</a>
+    <section class="greeting">
+      <h1 id="greetingText">Welcome 👋</h1>
+      <p>Your academic command center</p>
+    </section>
 
-</aside>
+    <!-- PROFILE CARD -->
+    <section class="card student-profile-card">
+      <h2>🎓 Student Profile</h2>
+      <p><strong>Name:</strong> <span id="studentName">—</span></p>
+      <p><strong>PRN:</strong> <span id="studentPRN">—</span></p>
+      <p><strong>Class:</strong> <span id="studentClass">—</span></p>
+      <p><strong>Division:</strong> <span id="studentDivision">—</span></p>
+      <p><strong>Year:</strong> <span id="studentYear">—</span></p>
+      <a href="/dashboards/student/profile.html" 
+        style="display:inline-block; margin-top:12px; font-size:13px; color:var(--primary);">
+        Edit Profile →
+      </a>
+    </section>
 
+    <!-- SNAPSHOT -->
+    <section class="snapshot">
+      <div class="snap-card"><h3>📢 Notices</h3><p id="noticeCount">0</p></div>
+      <div class="snap-card"><h3>🎉 Events</h3><p id="eventCount">0</p></div>
+      <div class="snap-card"><h3>📚 Resources</h3><p id="resourceCount">0</p></div>
+      <div class="snap-card"><h3>🏫 Clubs</h3><p id="clubCount">0</p></div>
+    </section>
 
-<div>
+    <!-- QUICK ACTIONS -->
+    <section class="quick-actions card">
+      <h2>⚡ Quick Actions</h2>
+      <div class="action-grid">
+        <div class="action" onclick="location.href='/common/events/events.html'">
+          🎉 Browse Events
+        </div>
+        <div class="action" onclick="location.href='/common/resources/resources.html'">
+          📚 Resources
+        </div>
+        <div class="action" onclick="location.href='/dashboards/student/academics.html'">
+          📊 Academics
+        </div>
+        <div class="action" onclick="location.href='/dashboards/student/notifications.html'">
+          🔔 Notifications
+        </div>
+      </div>
+    </section>
 
-<!-- MAIN -->
-<main class="dashboard">
+    <!-- ACADEMIC + EVENTS -->
+    <section class="main-grid">
+      <div class="card">
+        <h2>📊 Attendance</h2>
+        <p id="attendanceValue" 
+          style="font-size:28px; font-weight:800; color:var(--primary); margin:10px 0;">—</p>
+        <div class="progress-bar">
+          <div id="attendanceBar" class="progress-fill" style="width:0%;"></div>
+        </div>
+        <p id="attendanceNote" style="color:var(--muted); font-size:13px; margin-top:8px;"></p>
+      </div>
 
-<!-- WELCOME -->
-<section class="greeting">
-  <h1 id="greetingText">Welcome 👋</h1>
-  <p>Your academic command center</p>
-</section>
+      <div class="card">
+        <h2>🏆 Performance</h2>
+        <p id="performanceLabel" style="margin-top:8px;">Loading...</p>
+      </div>
+    </section>
 
+    <section class="main-grid">
+      <div class="card">
+        <h2>📝 Upcoming Assignments</h2>
+        <ul id="assignmentList" style="list-style:none; padding:0; margin-top:10px;">
+          <li style="color:var(--muted);">Loading...</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h2>📅 My Registered Events</h2>
+        <ul id="myEvents" style="list-style:none; padding:0; margin-top:10px;">
+          <li style="color:var(--muted);">Loading...</li>
+        </ul>
+      </div>
+    </section>
 
+    <!-- NOTICES + ACTIVITY -->
+    <section class="main-grid">
+      <div class="card">
+        <h2>📢 Recent Activity</h2>
+        <ul id="activityList" style="list-style:none; padding:0; margin-top:10px;">
+          <li style="color:var(--muted);">Loading...</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h2>🎯 Quick Stats</h2>
+        <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
+          <p style="font-size:14px;">
+            <strong>Email:</strong> <span id="studentEmail" style="color:var(--muted);">—</span>
+          </p>
+        </div>
+      </div>
+    </section>
 
-<!-- UPDATED STUDENT PROFILE CARD -->
-<section class="card student-profile-card">
-
-<h2>🎓 Student Profile</h2>
-
-<p><strong>Name:</strong> <span id="studentName"></span></p>
-<p><strong>PRN:</strong> <span id="studentPRN"></span></p>
-<p><strong>Class:</strong> <span id="studentClass"></span></p>
-<p><strong>Division:</strong> <span id="studentDivision"></span></p>
-<p><strong>Year:</strong> <span id="studentYear"></span></p>
-
-<!-- <small style="color:gray;">
-Click to open profile → Edit your details
-</small> -->
-
-</section>
-
-
-
-<!-- SNAPSHOT -->
-<section class="snapshot">
-  <div class="snap-card">
-    <h3>📢 Notices</h3>
-    <p id="noticeCount">0</p>
-  </div>
-  <div class="snap-card">
-    <h3>🎉 Events</h3>
-    <p id="eventCount">0</p>
-  </div>
-  <div class="snap-card">
-    <h3>📚 Resources</h3>
-    <p id="resourceCount">0</p>
-  </div>
-  <div class="snap-card">
-    <h3>🏫 Clubs</h3>
-    <p id="clubCount">0</p>
-  </div>
-</section>
-
-
-
-<!-- QUICK ACTIONS -->
-<section class="quick-actions">
-
-<h2>⚡ Quick Actions</h2>
-
-<div class="action-grid">
-
-  <div class="action" onclick="location.href='/common/events/events.html'">
-    🎉 Browse Events
-  </div>
-
-<div class="action" onclick="location.href='/common/resources/resources.html'">
-📚 View Resources
+  </main>
 </div>
 
+<script src="/common/academics/academics.js"></script>
+<script src="/common/events/events.js"></script>
+<script src="/common/notifications/notifications.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  // Dashboard data - LOAD ONCE
+  fetch("/dashboard/data", { credentials: "include" })
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById("greetingText").innerText = `Welcome, ${data.user || 'Student'} 👋`;
+      document.getElementById("studentName").innerText = data.user || "—";
+      document.getElementById("studentEmail").innerText = data.email || "—";
+      document.getElementById("studentPRN").innerText = data.prn || "—";
+      document.getElementById("studentClass").innerText = data.class_name || "—";
+      document.getElementById("studentDivision").innerText = data.division || "—";
+      document.getElementById("studentYear").innerText = data.current_year || "—";
+      document.getElementById("noticeCount").innerText = data.notices || 0;
+      document.getElementById("eventCount").innerText = data.events || 0;
+      document.getElementById("resourceCount").innerText = data.resources || 0;
+      document.getElementById("clubCount").innerText = data.clubs || 0;
 
-  <div class="action">
-    🏫 Join Clubs
-  </div>
+      // Activity
+      const al = document.getElementById("activityList");
+      al.innerHTML = data.activity?.length
+        ? data.activity.map(a => 
+            `<li style="padding:6px 0; border-bottom:1px solid var(--border); font-size:14px;">
+              ✔ ${escapeHtml(a.activity)}
+            </li>`
+          ).join("")
+        : "<li style='color:var(--muted);'>No recent activity</li>";
+    })
+    .catch(err => {
+      console.error("Dashboard data error:", err);
+    });
 
-  <div class="action">
-    📝 Submit Assignment
-  </div>
+  // Academics - LOAD ONCE with noteId
+  Academics.loadAttendance("attendanceBar", "attendanceValue", "attendanceNote");
+  Academics.loadAssignments("assignmentList");
+  Academics.loadPerformance("performanceLabel");
 
-</div>
-</section>
+  // My events - LOAD ONCE
+  Events.loadMyEvents("myEvents");
 
+  // Notifications badge - LOAD ONCE
+  Notifications.loadUnreadCount("notifBadge");
+});
 
-
-<!-- ACADEMIC -->
-<section class="academic-section">
-
-  <div class="card">
-    <h2>📊 Attendance</h2>
-    <p id="attendanceValue">Loading...</p>
-
-    <div class="progress-bar">
-      <div id="attendanceBar" class="progress-fill"></div>
-    </div>
-  </div>
-
-  <div class="card">
-    <h2>📝 Assignment Deadlines</h2>
-    <ul id="assignmentList"></ul>
-  </div>
-
-</section>
-
-
-
-<!-- PERFORMANCE + MY EVENTS -->
-<section class="main-grid">
-
-<div class="card">
-  <h2>🔥 Your Performance</h2>
-
-  <p style="color:var(--muted); margin-bottom:10px;">
-    Keep attending classes to stay above 75%.
-  </p>
-
-  <div class="progress-bar">
-    <div class="progress-fill" style="width:78%"></div>
-  </div>
-
-</div>
-
-
-<div class="card">
-  <h2>📅 My Registered Events</h2>
-  <ul id="myEvents"></ul>
-</div>
-
-</section>
-
-
-
-<!-- ACTIVITY + UPCOMING -->
-<section class="main-grid">
-
-<div class="card">
-  <h2>Recent Activity</h2>
-  <ul class="activity-list" id="activityList"></ul>
-</div>
-
-<div class="card">
-  <h2>Upcoming Events</h2>
-  <ul class="event-list" id="eventList"></ul>
-</div>
-
-</section>
-
-
-
-<!-- NOTICES -->
-<section class="card" style="margin-bottom:40px;">
-<h2>📢 Latest Notices</h2>
-<ul id="noticePreview"></ul>
-</section>
-
-
-
-<!-- ENGAGEMENT -->
-<section class="engagement">
-  <h2>Your Engagement</h2>
-  <p>You’re more active than <strong>58%</strong> of students</p>
-
-  <div class="progress-bar">
-    <div class="progress-fill"></div>
-  </div>
-</section>
-
-</main>
-
-</div>
-
-</div>
-
-
-<script src="/dashboards/student/dashboard.js"></script>
- 
-</body> 
+function escapeHtml(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+</script>
+</body>
 </html>

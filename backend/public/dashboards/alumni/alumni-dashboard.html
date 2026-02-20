@@ -1,115 +1,143 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Alumni Control</title>
-
-<!-- ✅ FIXED CSS -->
-<link rel="stylesheet" href="/css/style.css">
+  <meta charset="UTF-8">
+  <title>Alumni Dashboard | Campus Connect</title>
+  <link rel="stylesheet" href="/css/style.css">
 </head>
-
 <body class="dashboard-body">
-
 <div class="layout">
 
-<aside class="sidebar">
-<div class="logo-icon">A</div>
+  <aside class="sidebar">
+    <div class="logo-icon">AL</div>
+    <a href="/alumni/dashboard">🏠 Dashboard</a>
+    <a href="/alumni/profile-page">👤 My Profile</a>
+    <a href="/common/events/events.html">🎉 Events</a>
+    <a href="/alumni/directory-page">📋 Directory</a>
+    <a href="/logout">🚪 Logout</a>
+  </aside>
 
-<!-- ✅ FIXED DASHBOARD LINK -->
-<a href="/dashboards/alumni/alumni-dashboard.html">Dashboard</a>
+  <main class="dashboard">
+    <section class="greeting">
+      <h1 id="greetingText">Welcome back 👋</h1>
+      <p>Stay connected with your alma mater</p>
+    </section>
 
-<a href="/logout">Logout</a>
+    <!-- SNAPSHOT -->
+    <section class="snapshot">
+      <div class="snap-card"><h3>🎉 Upcoming Events</h3><p id="upcomingEvents">0</p></div>
+      <div class="snap-card"><h3>📢 Notices</h3><p id="noticeCount">0</p></div>
+    </section>
 
-</aside>
+    <!-- QUICK ACTIONS -->
+    <section class="quick-actions card">
+      <h2>⚡ Quick Actions</h2>
+      <div class="action-grid">
+        <div class="action" onclick="location.href='/alumni/profile-page'">👤 Update Profile</div>
+        <div class="action" onclick="showPanel('jobPanel')">💼 Post Job</div>
+        <div class="action" onclick="showPanel('notifyPanel')">📨 Send Notification</div>
+        <div class="action" onclick="location.href='/common/events/events.html'">🎉 Browse Events</div>
+      </div>
+    </section>
 
+    <!-- POST JOB -->
+    <section class="card" id="jobPanel" style="display:none; flex:none; width:100%;">
+      <h2>💼 Post Job Opportunity</h2>
+      <div style="display:flex; flex-direction:column; gap:12px; max-width:520px; margin-top:14px;">
+        <textarea id="jobText" placeholder="Job title, company, role, requirements, how to apply..." rows="4"
+          style="padding:12px; border-radius:10px; border:1px solid var(--border); font-family:inherit; resize:vertical;"></textarea>
+        <button onclick="postJob()"
+          style="padding:12px; border-radius:10px; border:none; background:linear-gradient(135deg,var(--primary),var(--secondary)); color:white; font-weight:700; cursor:pointer;">
+          Post Job
+        </button>
+        <p id="jobMsg" style="font-weight:600;"></p>
+      </div>
+    </section>
 
-<main class="dashboard">
+    <!-- SEND NOTIFICATION -->
+    <section class="card" id="notifyPanel" style="display:none; flex:none; width:100%;">
+      <h2>📨 Send Notification to Students</h2>
+      <div style="display:flex; flex-direction:column; gap:12px; max-width:520px; margin-top:14px;">
+        <textarea id="notifyMsg" placeholder="Your message to students..." rows="3"
+          style="padding:12px; border-radius:10px; border:1px solid var(--border); font-family:inherit; resize:vertical;"></textarea>
+        <button onclick="sendNotification()"
+          style="padding:12px; border-radius:10px; border:none; background:linear-gradient(135deg,var(--primary),var(--secondary)); color:white; font-weight:700; cursor:pointer;">
+          Send to All Students
+        </button>
+        <p id="notifyResult" style="font-weight:600;"></p>
+      </div>
+    </section>
 
-<section class="greeting">
-<h1>Alumni Control Panel</h1>
-<p>Maintain your professional profile</p>
-</section>
-
-<div class="card">
-
-<input id="full_name" placeholder="Full Name">
-<input id="graduation_year" placeholder="Graduation Year">
-<input id="degree" placeholder="Degree">
-
-<input id="company" placeholder="Company">
-<input id="job_title" placeholder="Job Title">
-<input id="work_location" placeholder="Work Location">
-
-<input id="linkedin" placeholder="LinkedIn URL">
-
-<br><br>
-
-<button id="saveBtn">Update Profile</button>
-
-</div>
-
-</main>
+    <!-- EVENTS + NOTICES -->
+    <section class="main-grid">
+      <div class="card">
+        <h2>📅 Upcoming Events</h2>
+        <ul id="eventList" style="list-style:none; padding:0; margin-top:10px;"></ul>
+      </div>
+      <div class="card">
+        <h2>📢 Campus Notices</h2>
+        <ul id="noticeList" style="list-style:none; padding:0; margin-top:10px;"></ul>
+      </div>
+    </section>
+  </main>
 </div>
 
 <script>
+document.addEventListener("DOMContentLoaded", () => {
+  fetch("/alumni/data", { credentials: "include" })
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById("greetingText").innerText = `Welcome back, ${data.name} 👋`;
+      document.getElementById("upcomingEvents").innerText = data.upcomingEvents || 0;
+      document.getElementById("noticeCount").innerText = data.notices || 0;
 
-/* LOAD */
+      const el = document.getElementById("eventList");
+      el.innerHTML = data.events?.length
+        ? data.events.map(e => `<li style="padding:8px 0; border-bottom:1px solid var(--border); font-size:14px;">📅 <strong>${e.title}</strong> — ${e.event_date ? e.event_date.slice(0,10) : "—"}</li>`).join("")
+        : "<li style='color:var(--muted);'>No upcoming events</li>";
 
-fetch("/alumni/profile") // ✅ CORRECT
-.then(res=>res.json())
-.then(data=>{
-
-if(!data) return;
-
-Object.keys(data).forEach(key=>{
-if(document.getElementById(key)){
-document.getElementById(key).value=data[key];
-}
+      const nl = document.getElementById("noticeList");
+      nl.innerHTML = data.noticeList?.length
+        ? data.noticeList.map(n => `<li style="padding:8px 0; border-bottom:1px solid var(--border); font-size:14px;">📢 ${n.title}</li>`).join("")
+        : "<li style='color:var(--muted);'>No notices</li>";
+    });
 });
 
-});
-
-
-/* SAVE */
-
-document.getElementById("saveBtn")
-.addEventListener("click",()=>{
-
-fetch("/alumni/profile/update",{  // ✅ CORRECT
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify({
-
-full_name:full_name.value,
-graduation_year:graduation_year.value,
-degree:degree.value,
-company:company.value,
-job_title:job_title.value,
-work_location:work_location.value,
-linkedin:linkedin.value
-
-})
-
-})
-.then(res=>res.json())
-.then(data=>{
-
-if(data.success){
-alert("✅ Profile Updated");
-}else{
-alert("Error saving profile");
+function showPanel(id) {
+  ["jobPanel","notifyPanel"].forEach(p => document.getElementById(p).style.display = "none");
+  const el = document.getElementById(id);
+  el.style.display = el.style.display === "none" ? "block" : "none";
 }
 
-});
- 
-});
- 
+function postJob() {
+  const title = document.getElementById("jobText").value.trim();
+  if (!title) return;
+  fetch("/alumni/job/post", {
+    method: "POST", credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title })
+  }).then(r => r.json()).then(d => {
+    const msg = document.getElementById("jobMsg");
+    msg.style.color = d.success ? "green" : "red";
+    msg.innerText = d.success ? "✅ Job posted to notices!" : "Failed";
+    if (d.success) document.getElementById("jobText").value = "";
+  });
+}
+
+function sendNotification() {
+  const message = document.getElementById("notifyMsg").value.trim();
+  if (!message) return;
+  fetch("/alumni/notify", {
+    method: "POST", credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message, target_role: "student" })
+  }).then(r => r.json()).then(d => {
+    const msg = document.getElementById("notifyResult");
+    msg.style.color = d.success ? "green" : "red";
+    msg.innerText = d.success ? `✅ Sent to ${d.sent} students!` : "Failed";
+    if (d.success) document.getElementById("notifyMsg").value = "";
+  });
+}
 </script>
-
 </body>
 </html>

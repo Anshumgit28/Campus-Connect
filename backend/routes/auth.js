@@ -1,195 +1,148 @@
+"use strict";
+
 console.log("✅ AUTH ROUTE LOADED");
-console.log("🔥 AUTH FILE EXECUTED");
-const express = require("express");
-const router = express.Router();
-const bcrypt = require("bcrypt");
-const db = require("../db");
+
+const express   = require("express");
+const router    = express.Router();
+const bcrypt    = require("bcrypt");
+const db        = require("../db");
 const rateLimit = require("express-rate-limit");
 
-
-/* ======================
-   LOGIN RATE LIMITER
-====================== */
+/* ── Strict rate limiter for login endpoint ── */
 const loginLimiter = rateLimit({
-  windowMs: 5 * 60 * 1000,
-  max: 5,
-  message: "Too many login attempts. Try again after 5 minutes."
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many login attempts. Please wait 5 minutes." }
 });
 
-
-/* =====================
+/* ─────────────────────────────────────────
    REGISTER
-===================== */
+───────────────────────────────────────── */
 router.post("/register", async (req, res) => {
-
   const { username, email, password } = req.body;
 
-  if (!username || !email || !password) {
-    return res.status(400).send("All fields required");
+  if (!username?.trim() || !email?.trim() || !password?.trim()) {
+    return res.status(400).send("All fields are required");
+  }
+  if (password.length < 6) {
+    return res.status(400).send("Password must be at least 6 characters");
   }
 
   try {
+    const hashed = await bcrypt.hash(password, 12); // cost 12 is production standard
 
-    //HASH PASSWORD
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    db.query(
+    await db.promise().query(
       "INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, 'student')",
-      [username, email, hashedPassword],
-      (err) => {
-
-        if (err) {
-          console.log("❌ REGISTER ERROR:", err);
-          return res.status(500).send("User already exists or DB error");
-        }
-
-        console.log("✅ USER REGISTERED:", email);
-
-        res.redirect("/login.html");
-      }
+      [username.trim(), email.trim().toLowerCase(), hashed]
     );
 
-  } catch (error) {
+    console.log("✅ USER REGISTERED:", email);
+    return res.redirect("/login.html");
 
-    console.log("❌ REGISTER CRASH:", error);
-    res.status(500).send("Registration error");
-
+  } catch (e) {
+    if (e.code === "ER_DUP_ENTRY") {
+      return res.status(400).send("Email already registered. Please log in.");
+    }
+    console.error("❌ REGISTER ERROR:", e.message);
+    return res.status(500).send("Registration failed. Please try again.");
   }
 });
 
-
-/* =====================
-   LOGIN (SUPER STABLE)
-===================== */
-router.post("/login", loginLimiter, (req, res) => {
-
+/* ─────────────────────────────────────────
+   LOGIN
+───────────────────────────────────────── */
+router.post("/login", loginLimiter, async (req, res) => {
   const { email, password } = req.body;
 
-  if (!email || !password) {
-    return res.status(400).send("Email and password required");
+  if (!email?.trim() || !password?.trim()) {
+    return res.status(400).send("Email and password are required");
   }
 
   console.log("🔐 LOGIN ATTEMPT:", email);
 
-  db.query(
-    "SELECT * FROM users WHERE email=?",
-    [email],
-    async (err, result) => {
+  try {
+    const [result] = await db.promise().query(
+      "SELECT * FROM users WHERE email = ?",
+      [email.trim().toLowerCase()]
+    );
 
-      if (err) {
-        console.log("❌ DB ERROR:", err);
-        return res.status(500).send("Server error");
-      }
-
-      if (result.length === 0) {
-        console.log("❌ USER NOT FOUND");
-        return res.status(401).send("Invalid credentials");
-      }
-
-      const user = result[0];
-
-      try {
-
-        const match = await bcrypt.compare(password, user.password);
-
-        if (!match) {
-          console.log("❌ PASSWORD WRONG");
-          return res.status(401).send("Invalid credentials");
-        }
-
-        /* =========================
-           CREATE STRONG SESSION
-        ========================= */
-
-        req.session.user = {
-
-          id: user.id,             
-          email: user.email,       
-          username: user.username,  
-          role: user.role
-
-        };
-
-        /* =========================
-           FORCE SESSION SAVE
-        ========================= */
-
-        req.session.save((err) => {
-
-          if (err) {
-            console.log("❌ SESSION SAVE ERROR:", err);
-            return res.status(500).send("Session error");
-          }
-
-          console.log("✅ SESSION CREATED:", req.session.user);
-
-          /* =====================
-             ROLE REDIRECT
-         /* =====================
-            ROLE REDIRECT
-          ===================== */
-
-          if (user.role === "admin") {
-            console.log("➡ Redirecting to ADMIN dashboard");
-            return res.redirect("/admin");
-          }
-
-          if (user.role === "alumni") {
-            console.log("➡ Redirecting to ALUMNI dashboard");
-            return res.redirect("/dashboards/alumni/alumni-dashboard.html");
-          }
-
-          console.log("➡ Redirecting to STUDENT dashboard");
-          return res.redirect("/dashboard");
-
-          if (user.role === "faculty") {
-            console.log("➡ Redirecting to FACULTY dashboard");
-            return res.redirect("/faculty/");
-          }
-
-          if (user.role === "club_head") {
-            console.log("➡ Redirecting to CLUB HEAD dashboard");
-            return res.redirect("/club/");
-          }
-
-          console.log("➡ Redirecting to STUDENT dashboard");
-          return res.redirect("/dashboard");
-
-
-        });
-
-      } catch (bcryptError) {
-
-        console.log("❌ BCRYPT ERROR:", bcryptError);
-        return res.status(500).send("Authentication error");
-
-      }
-
+    if (!result.length) {
+      return res.status(401).send("Invalid email or password");
     }
-  );
+
+    const user = result[0];
+
+    // Block inactive accounts
+    if (user.is_active === 0) {
+      return res.status(403).send("Account is deactivated. Contact admin.");
+    }
+
+    // Verify password
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
+      return res.status(401).send("Invalid email or password");
+    }
+
+    // Store session
+    req.session.user = {
+      id:       user.id,
+      email:    user.email,
+      username: user.username,
+      role:     user.role
+    };
+
+    // Save session BEFORE redirect — prevents race condition
+    req.session.save((saveErr) => {
+      if (saveErr) {
+        console.error("❌ SESSION SAVE ERROR:", saveErr);
+        return res.status(500).send("Login failed — session error. Try again.");
+      }
+
+      console.log("✅ SESSION CREATED:", req.session.user);
+
+      // Log activity (fire-and-forget — don't block redirect)
+      db.promise().query(
+        "INSERT INTO activity_log (user_id, activity) VALUES (?, ?)",
+        [user.id, "Logged in"]
+      ).catch(err => console.error("Activity log error:", err));
+
+      // Role-based redirect
+      const redirectMap = {
+        admin:     "/admin",
+        alumni:    "/alumni/dashboard",
+        faculty:   "/faculty/",
+        club_head: "/club/"
+      };
+
+      return res.redirect(redirectMap[user.role] || "/dashboard");
+    });
+
+  } catch (e) {
+    console.error("❌ LOGIN ERROR:", e.message);
+    return res.status(500).send("Login failed. Please try again.");
+  }
 });
 
-/* =====================
+/* ─────────────────────────────────────────
    LOGOUT
-===================== */
+───────────────────────────────────────── */
 router.get("/logout", (req, res) => {
+  const uid = req.session?.user?.id;
+
+  if (uid) {
+    db.promise().query(
+      "INSERT INTO activity_log (user_id, activity) VALUES (?, ?)",
+      [uid, "Logged out"]
+    ).catch(err => console.error("Logout log error:", err));
+  }
 
   req.session.destroy((err) => {
-
-    if (err) {
-      console.log("❌ LOGOUT ERROR:", err);
-      return res.redirect("/dashboards/student/dashboard.html");
-
-    }
-
-    console.log("👋 USER LOGGED OUT");
-
-    res.clearCookie("connect.sid"); 
-    res.redirect("/login.html");
-
+    if (err) console.error("❌ LOGOUT SESSION DESTROY ERROR:", err);
+    res.clearCookie("campus_connect.sid");
+    return res.redirect("/login.html");
   });
-
 });
 
-
-module.exports = router; 
+module.exports = router;

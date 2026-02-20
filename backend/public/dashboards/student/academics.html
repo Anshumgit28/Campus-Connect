@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Academics | Campus Connect</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="dashboard-body">
+<div class="layout">
+  <aside class="sidebar">
+    <div class="logo-icon">S</div>
+    <a href="/dashboard">🏠 Dashboard</a>
+    <a href="/dashboards/student/profile.html">👤 Profile</a>
+    <a href="/common/events/events.html">🎉 Events</a>
+    <a href="/common/resources/resources.html">📚 Resources</a>
+    <a href="/dashboards/student/academics.html">📊 Academics</a>
+    <a href="/dashboards/student/notifications.html">🔔 Notifications</a>
+    <a href="/logout">🚪 Logout</a>
+  </aside>
+  <main class="dashboard">
+    <section class="greeting">
+      <h1>📊 My Academics</h1>
+      <p>View attendance, assignments, exams and grades</p>
+    </section>
+
+    <!-- Attendance + Performance -->
+    <section class="main-grid">
+      <div class="card">
+        <h2>📊 Attendance</h2>
+        <p id="attendanceValue"
+          style="font-size:36px; font-weight:800; color:var(--primary); margin:10px 0;">—</p>
+        <div class="progress-bar">
+          <div id="attendanceBar" class="progress-fill" 
+            style="width:0%; transition:width .5s;"></div>
+        </div>
+        <p id="attendanceNote" style="font-size:13px; margin-top:8px; color:var(--muted);"></p>
+      </div>
+      <div class="card">
+        <h2>🏆 Performance Summary</h2>
+        <p id="performanceLabel" style="margin-top:12px; font-size:18px;">Loading...</p>
+      </div>
+    </section>
+
+    <!-- Assignments + Exams -->
+    <section class="main-grid">
+      <div class="card">
+        <h2>📝 Upcoming Assignments</h2>
+        <ul id="assignmentList"
+          style="list-style:none; padding:0; margin-top:10px;">
+          <li style="color:var(--muted);">Loading...</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h2>🧪 Upcoming Exams</h2>
+        <ul id="examList"
+          style="list-style:none; padding:0; margin-top:10px;">
+          <li style="color:var(--muted);">Loading...</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Grades -->
+    <section class="card" style="width:100%; flex:none;">
+      <h2>🎓 Grades</h2>
+      <div id="gradeContainer" style="margin-top:16px;">
+        <p style="color:var(--muted);">Loading...</p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="/common/academics/academics.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  // ✅ FIXED: Pass all 3 parameters including noteId
+  Academics.loadAttendance("attendanceBar", "attendanceValue", "attendanceNote");
+  Academics.loadAssignments("assignmentList");
+  Academics.loadExams("examList");
+  Academics.loadGrades("gradeContainer");
+  Academics.loadPerformance("performanceLabel");
+});
+</script>
+</body>
+</html>

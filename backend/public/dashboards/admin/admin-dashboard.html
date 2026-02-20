@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Panel | Campus Connect</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="dashboard-body">
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="logo-icon">A</div>
+    <a href="/admin">🏠 Dashboard</a>
+    <a href="/admin/users">👥 Users</a>
+    <a href="/admin/events">🎉 Events</a>
+    <a href="/admin/analytics">📊 Analytics</a>
+    <a href="/logout">🚪 Logout</a>
+  </aside>
+
+  <main class="dashboard">
+    <section class="greeting">
+      <h1>👑 Admin Control Panel</h1>
+      <p>Manage the entire Campus Connect system</p>
+    </section>
+
+    <!-- SNAPSHOT -->
+    <section class="snapshot">
+      <div class="snap-card"><h3>👥 Users</h3><p id="totalUsers">0</p></div>
+      <div class="snap-card"><h3>🎉 Events</h3><p id="totalEvents">0</p></div>
+      <div class="snap-card"><h3>📚 Resources</h3><p id="totalResources">0</p></div>
+      <div class="snap-card"><h3>🏫 Clubs</h3><p id="totalClubs">0</p></div>
+      <div class="snap-card"><h3>📋 Registrations</h3><p id="totalReg">0</p></div>
+    </section>
+
+    <!-- QUICK ACTIONS -->
+    <section class="quick-actions card">
+      <h2>⚡ Quick Actions</h2>
+      <div class="action-grid">
+        <div class="action" onclick="location.href='/admin/users'">👥 Manage Users</div>
+        <div class="action" onclick="location.href='/admin/events'">🎉 Manage Events</div>
+        <div class="action" onclick="showPanel('noticePanel')">📢 Post Notice</div>
+        <div class="action" onclick="showPanel('clubPanel')">🏫 Add Club</div>
+      </div>
+    </section>
+
+    <!-- POST NOTICE -->
+    <section class="card" id="noticePanel" style="display:none; flex:none; width:100%;">
+      <h2>📢 Post Global Notice</h2>
+      <div style="display:flex; flex-direction:column; gap:12px; max-width:500px; margin-top:14px;">
+        <textarea id="noticeText" placeholder="Notice content..." rows="3"
+          style="padding:12px; border-radius:10px; border:1px solid var(--border); font-family:inherit; resize:vertical;"></textarea>
+        <button onclick="postNotice()"
+          style="padding:12px; border-radius:10px; border:none; background:linear-gradient(135deg,var(--primary),var(--secondary)); color:white; font-weight:700; cursor:pointer;">
+          Post Notice
+        </button>
+        <p id="noticeMsg" style="font-weight:600;"></p>
+      </div>
+    </section>
+
+    <!-- ADD CLUB -->
+    <section class="card" id="clubPanel" style="display:none; flex:none; width:100%;">
+      <h2>🏫 Add New Club</h2>
+      <div style="display:flex; flex-direction:column; gap:12px; max-width:500px; margin-top:14px;">
+        <input id="clubName" placeholder="Club Name" style="padding:12px; border-radius:10px; border:1px solid var(--border);">
+        <input id="clubCategory" placeholder="Category (e.g. Technical, Cultural)" style="padding:12px; border-radius:10px; border:1px solid var(--border);">
+        <textarea id="clubDesc" placeholder="Description" rows="2" style="padding:12px; border-radius:10px; border:1px solid var(--border); font-family:inherit;"></textarea>
+        <button onclick="addClub()"
+          style="padding:12px; border-radius:10px; border:none; background:linear-gradient(135deg,var(--primary),var(--secondary)); color:white; font-weight:700; cursor:pointer;">
+          Add Club
+        </button>
+        <p id="clubMsg" style="font-weight:600;"></p>
+      </div>
+    </section>
+
+    <!-- RECENT USERS + ACTIVITY -->
+    <section class="main-grid">
+      <div class="card">
+        <h2>🆕 Recent Users</h2>
+        <div id="recentUsers" style="display:flex; flex-direction:column; gap:8px; margin-top:12px;"></div>
+      </div>
+      <div class="card">
+        <h2>🕐 Recent Activity</h2>
+        <div id="activityLog" style="display:flex; flex-direction:column; gap:8px; margin-top:12px; max-height:320px; overflow-y:auto;"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", loadDashboard);
+
+function loadDashboard() {
+  fetch("/admin/data", { credentials: "include" })
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById("totalUsers").innerText = data.users || 0;
+      document.getElementById("totalEvents").innerText = data.events || 0;
+      document.getElementById("totalResources").innerText = data.resources || 0;
+      document.getElementById("totalClubs").innerText = data.clubs || 0;
+      document.getElementById("totalReg").innerText = data.registrations || 0;
+
+      const ru = document.getElementById("recentUsers");
+      ru.innerHTML = data.recentUsers?.length
+        ? data.recentUsers.map(u => `
+            <div style="padding:10px; border-radius:10px; background:var(--bg); display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <strong style="font-size:14px;">${u.username}</strong>
+                <p style="font-size:12px; color:var(--muted);">${u.email}</p>
+              </div>
+              <span style="font-size:12px; background:var(--primary); color:white; padding:2px 10px; border-radius:20px;">${u.role}</span>
+            </div>`).join("")
+        : "<p style='color:var(--muted);'>No users</p>";
+
+      const al = document.getElementById("activityLog");
+      al.innerHTML = data.activity?.length
+        ? data.activity.map(a => `
+            <div style="padding:8px 10px; border-radius:8px; background:var(--bg); font-size:13px;">
+              <strong>${a.username}</strong> — ${a.activity}
+              <p style="font-size:11px; color:var(--muted); margin-top:2px;">${a.created_at ? new Date(a.created_at).toLocaleDateString("en-IN") : ""}</p>
+            </div>`).join("")
+        : "<p style='color:var(--muted);'>No activity</p>";
+    });
+}
+
+function showPanel(id) {
+  ["noticePanel","clubPanel"].forEach(p => {
+    document.getElementById(p).style.display = "none";
+  });
+  const el = document.getElementById(id);
+  el.style.display = el.style.display === "none" ? "block" : "none";
+}
+
+function postNotice() {
+  const title = document.getElementById("noticeText").value.trim();
+  if (!title) return;
+  fetch("/admin/notice", {
+    method: "POST", credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title })
+  }).then(r => r.json()).then(d => {
+    const msg = document.getElementById("noticeMsg");
+    msg.style.color = d.success ? "green" : "red";
+    msg.innerText = d.success ? "✅ Notice posted!" : "Failed";
+    if (d.success) document.getElementById("noticeText").value = "";
+  });
+}
+
+function addClub() {
+  const name = document.getElementById("clubName").value.trim();
+  const category = document.getElementById("clubCategory").value.trim();
+  const description = document.getElementById("clubDesc").value.trim();
+  if (!name) return;
+  fetch("/admin/club", {
+    method: "POST", credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, category, description })
+  }).then(r => r.json()).then(d => {
+    const msg = document.getElementById("clubMsg");
+    msg.style.color = d.success ? "green" : "red";
+    msg.innerText = d.success ? "✅ Club added!" : "Failed";
+    if (d.success) { document.getElementById("clubName").value = ""; loadDashboard(); }
+  });
+}
+</script>
+</body>
+</html>

@@ -1,162 +1,139 @@
 const express = require("express");
-const router = express.Router();
-const db = require("../db");
-const auth = require("../middleware/authMiddleware");
-const adminOnly = require("../middleware/adminMiddleware");
+const router  = express.Router();
+const db      = require("../db");
+const auth    = require("../middleware/authMiddleware");
 
-
-// =======================
-// GET ALL UPCOMING EVENTS (WITH FILTER)  
-// =======================
-router.get("/", auth, (req, res) => {
-  const category = req.query.category;
-
-  let sql = `
-    SELECT * FROM events 
-    WHERE event_date >= CURDATE()
-    ORDER BY event_date ASC
-  `;
-
-  let params = [];
-
-  if (category && category !== "") {
-    sql = `
-      SELECT * FROM events 
-      WHERE category=? 
-      AND event_date >= CURDATE()
-      ORDER BY event_date ASC
-    `;
-    params = [category];
+/* ── MY REGISTERED EVENTS — MUST BE BEFORE /:id ── */
+router.get("/my/registered", auth, async (req, res) => {
+  try {
+    const [rows] = await db.promise().query(
+      `SELECT e.id, e.title, e.event_date, e.event_time, e.venue, e.category
+       FROM event_registrations er
+       JOIN events e ON e.id = er.event_id
+       WHERE er.user_id = ?
+       ORDER BY e.event_date ASC`,
+      [req.session.user.id]
+    );
+    res.json(rows);
+  } catch (e) {
+    console.error("MY EVENTS ERROR:", e);
+    res.json([]);
   }
-
-  db.query(sql, params, (err, events) => {
-    if (err) {
-      console.log("EVENT FETCH ERROR:", err);
-      return res.json([]);
-    }
-
-    console.log("EVENTS SENT:", events.length);
-    res.json(events);
-  });
 });
 
+/* ── ALL UPCOMING EVENTS ── */
+router.get("/", auth, async (req, res) => {
+  const { category } = req.query;
+  try {
+    let sql = "SELECT * FROM events WHERE event_date >= CURDATE()";
+    const params = [];
+    if (category) { 
+      sql += " AND category = ?"; 
+      params.push(category); 
+    }
+    sql += " ORDER BY event_date ASC";
+    const [rows] = await db.promise().query(sql, params);
+    res.json(rows);
+  } catch (e) {
+    console.error("EVENTS LIST ERROR:", e);
+    res.json([]);
+  }
+});
 
-// =======================
-// GET SINGLE EVENT DETAILS
-// =======================
-router.get("/events/:id", auth, (req, res) => {
-  db.query("SELECT * FROM events WHERE id=?", [req.params.id], (err, result) => {
-    if (err || result.length === 0) {
-      console.log("EVENT NOT FOUND");
+/* ── REGISTER FOR EVENT ── */
+router.post("/register", auth, async (req, res) => {
+  const { eventId } = req.body;
+  const uid = req.session.user.id;
+
+  if (!eventId) return res.json({ success: false, message: "Event ID missing" });
+
+  try {
+    // Check already registered
+    const [existing] = await db.promise().query(
+      "SELECT id FROM event_registrations WHERE user_id = ? AND event_id = ?",
+      [uid, eventId]
+    );
+    if (existing.length) {
+      return res.json({ success: false, message: "Already registered" });
+    }
+
+    // Check seat availability
+    const [[event]] = await db.promise().query(
+      "SELECT seats FROM events WHERE id = ?", 
+      [eventId]
+    );
+    if (!event) {
+      return res.json({ success: false, message: "Event not found" });
+    }
+
+    if (event.seats !== null) {
+      const [[regCount]] = await db.promise().query(
+        "SELECT COUNT(*) c FROM event_registrations WHERE event_id = ?", 
+        [eventId]
+      );
+      if (regCount.c >= event.seats) {
+        return res.json({ success: false, message: "Event is full" });
+      }
+    }
+
+    // Register
+    await db.promise().query(
+      "INSERT INTO event_registrations (user_id, event_id) VALUES (?, ?)",
+      [uid, eventId]
+    );
+    
+    // Log activity
+    await db.promise().query(
+      "INSERT INTO activity_log (user_id, activity) VALUES (?, ?)",
+      [uid, `Registered for event ID ${eventId}`]
+    );
+
+    res.json({ success: true });
+  } catch (e) {
+    console.error("REGISTER ERROR:", e);
+    res.json({ success: false, message: e.message });
+  }
+});
+
+/* ── CANCEL REGISTRATION ── */
+router.post("/cancel", auth, async (req, res) => {
+  const { eventId } = req.body;
+  if (!eventId) return res.json({ success: false, message: "Event ID missing" });
+  
+  try {
+    await db.promise().query(
+      "DELETE FROM event_registrations WHERE user_id = ? AND event_id = ?",
+      [req.session.user.id, eventId]
+    );
+    res.json({ success: true });
+  } catch (e) {
+    console.error("CANCEL ERROR:", e);
+    res.json({ success: false });
+  }
+});
+
+/* ── SINGLE EVENT — WILDCARD MUST BE LAST ── */
+router.get("/:id", auth, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "Invalid ID" });
+    }
+    
+    const [[row]] = await db.promise().query(
+      "SELECT * FROM events WHERE id = ?", 
+      [id]
+    );
+    
+    if (!row) {
       return res.status(404).json({ error: "Event not found" });
     }
-    res.json(result[0]);
-  });
-});
-
-
-// =======================
-// REGISTER FOR EVENT
-// =======================
-router.post("/events/register", auth, (req, res) => {
-  const userId = req.session.user.id;
-  const { eventId } = req.body;
-
-  if (!eventId) {
-    return res.json({ success: false, message: "Event ID missing" });
+    
+    res.json(row);
+  } catch (e) {
+    console.error("EVENT FETCH ERROR:", e);
+    res.status(500).json({ error: e.message });
   }
-
-  // Prevent duplicate registration
-  db.query(
-    "SELECT * FROM event_registrations WHERE user_id=? AND event_id=?",
-    [userId, eventId],
-    (err, existing) => {
-
-      if (existing.length > 0) {
-        return res.json({ success: false, message: "Already registered" });
-      }
-
-      db.query(
-        "INSERT INTO event_registrations (user_id, event_id) VALUES (?, ?)",
-        [userId, eventId],
-        (err) => {
-          if (err) {
-            console.log("REGISTER ERROR:", err);
-            return res.json({ success: false });
-          }
-          res.json({ success: true });
-        }
-      );
-    }
-  );
 });
-
-
-// =======================
-// CANCEL EVENT REGISTRATION
-// =======================
-router.post("/events/cancel", auth, (req, res) => {
-  const userId = req.session.user.id;
-  const { eventId } = req.body;
-
-  db.query(
-    "DELETE FROM event_registrations WHERE user_id=? AND event_id=?",
-    [userId, eventId],
-    (err) => {
-      if (err) {
-        console.log("CANCEL ERROR:", err);
-        return res.json({ success: false });
-      }
-      res.json({ success: true });
-    }
-  );
-});
-
-
-// =======================
-// GET MY REGISTERED EVENTS
-// =======================
-router.get("/events/my", auth, (req, res) => {
-  const userId = req.session.user.id;
-
-  db.query(
-    `SELECT events.* FROM event_registrations
-     JOIN events ON events.id = event_registrations.event_id
-     WHERE event_registrations.user_id=?`,
-    [userId],
-    (err, results) => {
-      if (err) {
-        console.log("MY EVENTS ERROR:", err);
-        return res.json([]);
-      }
-      res.json(results);
-    }
-  );
-});
-
-
-// =======================
-// ADMIN VIEW EVENT REGISTRATIONS
-// =======================
-router.get("/admin/event-registrations/:eventId", auth, adminOnly, (req, res) => {
-  const eventId = req.params.eventId;
-
-  db.query(
-    `SELECT users.username, users.email 
-     FROM event_registrations 
-     JOIN users ON users.id = event_registrations.user_id 
-     WHERE event_id=?`,
-    [eventId],
-    (err, users) => {
-      if (err) {
-        console.log("ADMIN REGISTRATION VIEW ERROR:", err);
-        return res.json([]);
-      }
-      res.json(users);
-    }
-  );
-});
-
 
 module.exports = router;
-   
