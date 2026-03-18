@@ -1,435 +1,391 @@
-const express = require("express");
-const router = express.Router();
-const db = require("../db");
-const path = require("path");
-const auth = require("../middleware/authMiddleware");
-const clubHeadOnly = require("../middleware/clubMiddleware");
+"use strict";
 
-// Apply auth + role check to all club routes
-router.use(auth, clubHeadOnly);
+const express      = require("express");
+const router       = express.Router();
+const db           = require("../db");
+const path         = require("path");
+const auth         = require("../middleware/authMiddleware");
+const clubMiddleware = require("../middleware/clubMiddleware");
 
+router.use(auth);
 
-/* =====================================================
-   CLUB DASHBOARD PAGES
-===================================================== */
-router.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "../public/dashboards/club/club-dashboard.html"));
-});
+/* ═══════════════════════════════════════════
+   HTML PAGES
+═══════════════════════════════════════════ */
+router.get("/", clubMiddleware, (req, res) =>
+  res.sendFile(path.join(__dirname, "../public/dashboards/club/club-dashboard.html")));
 
-router.get("/members", (req, res) => {
-  res.sendFile(path.join(__dirname, "../public/dashboards/club/club-members.html"));
-});
+router.get("/members", clubMiddleware, (req, res) =>
+  res.sendFile(path.join(__dirname, "../public/dashboards/club/club-members.html")));
 
-router.get("/events", (req, res) => {
-  res.sendFile(path.join(__dirname, "../public/dashboards/club/club-events.html"));
-});
+router.get("/events", clubMiddleware, (req, res) =>
+  res.sendFile(path.join(__dirname, "../public/dashboards/club/club-events.html")));
 
-router.get("/announcements", (req, res) => {
-  res.sendFile(path.join(__dirname, "../public/dashboards/club/club-announcements.html"));
-});
+router.get("/announcements", clubMiddleware, (req, res) =>
+  res.sendFile(path.join(__dirname, "../public/dashboards/club/club-announcements.html")));
 
-
-/* =====================================================
-   GET MY CLUB DETAILS
-===================================================== */
-router.get("/details", async (req, res) => {
-  const userId = req.session.user.id;
-  try {
-    const [clubs] = await db.promise().query(
-      `SELECT * FROM clubs WHERE club_head_id = ?`,
-      [userId]
-    );
-    res.json(clubs[0] || null);
-  } catch (err) {
-    console.error("CLUB DETAILS ERROR:", err);
-    res.json(null);
-  }
-});
-
-
-/* =====================================================
-   DASHBOARD SUMMARY DATA
-===================================================== */
-router.get("/data", async (req, res) => {
-  const userId = req.session.user.id;
+/* ═══════════════════════════════════════════
+   DASHBOARD DATA
+   Fixes:
+   - notices has no `type` column
+   - user_clubs has no `id` or `created_at`
+═══════════════════════════════════════════ */
+router.get("/data", clubMiddleware, async (req, res) => {
+  const uid = req.session.user.id;
 
   try {
-    const [clubs] = await db.promise().query(
-      `SELECT * FROM clubs WHERE club_head_id = ?`,
-      [userId]
+    const [[club]] = await db.promise().query(
+      "SELECT id, name FROM clubs WHERE head_id = ?", [uid]
     );
 
-    if (!clubs.length) {
-      return res.json({ name: req.session.user.username, clubName: "No Club Assigned", memberCount: 0, eventCount: 0, pendingCount: 0, announcementCount: 0 });
+    if (!club) {
+      return res.json({
+        name: req.session.user.username,
+        clubName: "No club assigned",
+        memberCount: 0, pendingCount: 0,
+        eventCount: 0, announcementCount: 0
+      });
     }
 
-    const club = clubs[0];
-
-    const [[memberRow]] = await db.promise().query(
-      `SELECT COUNT(*) AS count FROM user_clubs WHERE club_id = ? AND status = 'approved'`,
-      [club.id]
-    );
-    const [[pendingRow]] = await db.promise().query(
-      `SELECT COUNT(*) AS count FROM user_clubs WHERE club_id = ? AND status = 'pending'`,
-      [club.id]
-    );
-    const [[eventRow]] = await db.promise().query(
-      `SELECT COUNT(*) AS count FROM events WHERE club_id = ?`,
-      [club.id]
-    );
-    const [[noticeRow]] = await db.promise().query(
-      `SELECT COUNT(*) AS count FROM notices WHERE club_id = ?`,
-      [club.id]
-    );
+    const [
+      [[members]],
+      [[pending]],
+      [[events]],
+      [[announcements]]
+    ] = await Promise.all([
+      db.promise().query(
+        "SELECT COUNT(*) AS count FROM user_clubs WHERE club_id = ? AND status = 'approved'",
+        [club.id]
+      ),
+      db.promise().query(
+        "SELECT COUNT(*) AS count FROM user_clubs WHERE club_id = ? AND status = 'pending'",
+        [club.id]
+      ),
+      db.promise().query(
+        "SELECT COUNT(*) AS count FROM events WHERE organizer = ?",
+        [club.name]
+      ),
+      /* notices has no type column — count by club_id instead */
+      db.promise().query(
+        "SELECT COUNT(*) AS count FROM notices WHERE created_by = ?",
+        [uid]
+      )
+    ]);
 
     res.json({
-      name: req.session.user.username,
-      clubName: club.name,
-      clubId: club.id,
-      memberCount: memberRow.count,
-      pendingCount: pendingRow.count,
-      eventCount: eventRow.count,
-      announcementCount: noticeRow.count
+      name:              req.session.user.username,
+      clubName:          club.name,
+      memberCount:       members.count,
+      pendingCount:      pending.count,
+      eventCount:        events.count,
+      announcementCount: announcements.count
     });
 
   } catch (err) {
-    console.error("CLUB DASH DATA ERROR:", err);
-    res.json({ name: req.session.user.username, clubName: "Error", memberCount: 0, eventCount: 0, pendingCount: 0, announcementCount: 0 });
+    console.error("Club data error:", err.message);
+    res.status(500).json({ error: err.message });
   }
 });
 
+/* ═══════════════════════════════════════════
+   ANALYTICS
+   user_clubs has no joined_at column —
+   removed ORDER BY uc.joined_at
+═══════════════════════════════════════════ */
+router.get("/analytics", clubMiddleware, async (req, res) => {
+  const uid = req.session.user.id;
 
-/* =====================================================
-   GET CLUB MEMBERS (APPROVED)
-===================================================== */
-router.get("/members/list", async (req, res) => {
-  const userId = req.session.user.id;
   try {
-    const [clubs] = await db.promise().query(
-      `SELECT id FROM clubs WHERE club_head_id = ?`, [userId]
+    const [[club]] = await db.promise().query(
+      "SELECT id FROM clubs WHERE head_id = ?", [uid]
     );
-    if (!clubs.length) return res.json([]);
-    const clubId = clubs[0].id;
 
-    const [members] = await db.promise().query(
-      `SELECT u.id, u.username, u.email, u.prn, u.class_name, u.current_year, uc.status, uc.id AS uc_id
-       FROM user_clubs uc
-       JOIN users u ON u.id = uc.user_id
-       WHERE uc.club_id = ? AND uc.status = 'approved'
-       ORDER BY u.username`,
-      [clubId]
-    );
-    res.json(members);
+    if (!club) {
+      return res.json({ memberCount: 0, pendingCount: 0, upcomingEvents: 0, recentMembers: [] });
+    }
+
+    const [
+      [[members]],
+      [[pending]],
+      [[upcoming]],
+      [recent]
+    ] = await Promise.all([
+      db.promise().query(
+        "SELECT COUNT(*) AS count FROM user_clubs WHERE club_id = ? AND status = 'approved'",
+        [club.id]
+      ),
+      db.promise().query(
+        "SELECT COUNT(*) AS count FROM user_clubs WHERE club_id = ? AND status = 'pending'",
+        [club.id]
+      ),
+      db.promise().query(
+        `SELECT COUNT(*) AS count FROM events
+         WHERE organizer = (SELECT name FROM clubs WHERE id = ?)
+         AND event_date >= CURDATE()`,
+        [club.id]
+      ),
+      /* user_clubs has no joined_at — order by user_id DESC as fallback */
+      db.promise().query(
+        `SELECT u.username, u.class_name
+         FROM user_clubs uc
+         JOIN users u ON uc.user_id = u.id
+         WHERE uc.club_id = ? AND uc.status = 'approved'
+         ORDER BY uc.user_id DESC
+         LIMIT 5`,
+        [club.id]
+      )
+    ]);
+
+    res.json({
+      memberCount:    members.count,
+      pendingCount:   pending.count,
+      upcomingEvents: upcoming.count,
+      recentMembers:  recent
+    });
+
   } catch (err) {
-    console.error("MEMBERS ERROR:", err);
-    res.json([]);
+    console.error("Club analytics error:", err.message);
+    res.status(500).json({ error: err.message });
   }
 });
 
+/* ═══════════════════════════════════════════
+   MEMBER MANAGEMENT
+   user_clubs has no id column, no created_at —
+   use (user_id, club_id) as composite key
+   uc_id sent to frontend is actually user_id
+═══════════════════════════════════════════ */
+router.get("/members/requests", clubMiddleware, async (req, res) => {
+  const uid = req.session.user.id;
 
-/* =====================================================
-   GET PENDING JOIN REQUESTS
-===================================================== */
-router.get("/members/requests", async (req, res) => {
-  const userId = req.session.user.id;
   try {
-    const [clubs] = await db.promise().query(
-      `SELECT id FROM clubs WHERE club_head_id = ?`, [userId]
+    const [[club]] = await db.promise().query(
+      "SELECT id FROM clubs WHERE head_id = ?", [uid]
     );
-    if (!clubs.length) return res.json([]);
-    const clubId = clubs[0].id;
+    if (!club) return res.json([]);
 
+    /* No id/created_at in user_clubs — use user_id as uc_id */
     const [requests] = await db.promise().query(
-      `SELECT u.id, u.username, u.email, u.prn, u.class_name, uc.id AS uc_id
+      `SELECT uc.user_id AS uc_id, u.username, u.email, u.prn, u.class_name
        FROM user_clubs uc
-       JOIN users u ON u.id = uc.user_id
-       WHERE uc.club_id = ? AND uc.status = 'pending'
-       ORDER BY uc.id DESC`,
-      [clubId]
+       JOIN users u ON uc.user_id = u.id
+       WHERE uc.club_id = ? AND uc.status = 'pending'`,
+      [club.id]
     );
     res.json(requests);
+
   } catch (err) {
-    console.error("REQUESTS ERROR:", err);
-    res.json([]);
+    console.error("Load requests error:", err.message);
+    res.status(500).json({ error: err.message });
   }
 });
 
-
-/* =====================================================
-   APPROVE / REJECT JOIN REQUEST
-===================================================== */
-router.post("/members/respond", async (req, res) => {
-  const userId = req.session.user.id;
-  const { uc_id, action } = req.body; // action: 'approved' or 'rejected'
-
-  if (!uc_id || !["approved", "rejected"].includes(action)) {
-    return res.json({ success: false, message: "Invalid request" });
-  }
+router.get("/members/list", clubMiddleware, async (req, res) => {
+  const uid = req.session.user.id;
 
   try {
-    // Verify this club_head owns the club for this request
-    const [check] = await db.promise().query(
-      `SELECT uc.id FROM user_clubs uc
-       JOIN clubs c ON c.id = uc.club_id
-       WHERE uc.id = ? AND c.club_head_id = ?`,
-      [uc_id, userId]
+    const [[club]] = await db.promise().query(
+      "SELECT id FROM clubs WHERE head_id = ?", [uid]
     );
-    if (!check.length) return res.json({ success: false, message: "Unauthorized" });
+    if (!club) return res.json([]);
+
+    /* uc_id = user_id (no id column in user_clubs) */
+    const [members] = await db.promise().query(
+      `SELECT uc.user_id AS uc_id, u.username, u.email, u.prn, u.class_name, u.current_year
+       FROM user_clubs uc
+       JOIN users u ON uc.user_id = u.id
+       WHERE uc.club_id = ? AND uc.status = 'approved'`,
+      [club.id]
+    );
+    res.json(members);
+
+  } catch (err) {
+    console.error("Load members error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* respond uses uc_id which is actually user_id now */
+router.post("/members/respond", clubMiddleware, async (req, res) => {
+  const { uc_id, action } = req.body;
+  if (!uc_id || !action)
+    return res.json({ success: false, message: "Missing parameters" });
+
+  const uid = req.session.user.id;
+
+  try {
+    /* get club_id for this club head */
+    const [[club]] = await db.promise().query(
+      "SELECT id FROM clubs WHERE head_id = ?", [uid]
+    );
+    if (!club) return res.json({ success: false, message: "Club not found" });
 
     await db.promise().query(
-      `UPDATE user_clubs SET status = ? WHERE id = ?`,
-      [action, uc_id]
+      "UPDATE user_clubs SET status = ? WHERE user_id = ? AND club_id = ?",
+      [action, uc_id, club.id]
     );
     res.json({ success: true });
+
   } catch (err) {
-    console.error("RESPOND ERROR:", err);
+    console.error("Respond error:", err.message);
     res.json({ success: false, message: err.message });
   }
 });
 
-
-/* =====================================================
-   REMOVE MEMBER
-===================================================== */
-router.post("/members/remove", async (req, res) => {
-  const userId = req.session.user.id;
+router.post("/members/remove", clubMiddleware, async (req, res) => {
   const { uc_id } = req.body;
+  if (!uc_id) return res.json({ success: false, message: "Missing uc_id" });
+
+  const uid = req.session.user.id;
 
   try {
-    const [check] = await db.promise().query(
-      `SELECT uc.id FROM user_clubs uc
-       JOIN clubs c ON c.id = uc.club_id
-       WHERE uc.id = ? AND c.club_head_id = ?`,
-      [uc_id, userId]
+    const [[club]] = await db.promise().query(
+      "SELECT id FROM clubs WHERE head_id = ?", [uid]
     );
-    if (!check.length) return res.json({ success: false, message: "Unauthorized" });
-
-    await db.promise().query(`DELETE FROM user_clubs WHERE id = ?`, [uc_id]);
-    res.json({ success: true });
-  } catch (err) {
-    console.error("REMOVE MEMBER ERROR:", err);
-    res.json({ success: false });
-  }
-});
-
-
-/* =====================================================
-   CREATE CLUB EVENT
-===================================================== */
-router.post("/events/create", async (req, res) => {
-  const userId = req.session.user.id;
-  const { title, description, category, event_date, event_time, venue, seats } = req.body;
-
-  if (!title || !event_date) {
-    return res.json({ success: false, message: "Title and date required" });
-  }
-
-  try {
-    const [clubs] = await db.promise().query(
-      `SELECT id FROM clubs WHERE club_head_id = ?`, [userId]
-    );
-    if (!clubs.length) return res.json({ success: false, message: "No club found" });
-    const clubId = clubs[0].id;
+    if (!club) return res.json({ success: false, message: "Club not found" });
 
     await db.promise().query(
-      `INSERT INTO events (title, description, category, event_date, event_time, venue, seats, club_id, created_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [title, description || null, category || "Cultural", event_date, event_time || null, venue || null, seats || null, clubId, userId]
+      "DELETE FROM user_clubs WHERE user_id = ? AND club_id = ?",
+      [uc_id, club.id]
     );
     res.json({ success: true });
+
   } catch (err) {
-    console.error("CREATE EVENT ERROR:", err);
+    console.error("Remove member error:", err.message);
     res.json({ success: false, message: err.message });
   }
 });
 
+/* ═══════════════════════════════════════════
+   EVENT MANAGEMENT
+═══════════════════════════════════════════ */
+router.post("/events/create", clubMiddleware, async (req, res) => {
+  const { title, description, category, event_date, event_time, venue, seats } = req.body;
+  const uid = req.session.user.id;
 
-/* =====================================================
-   GET CLUB EVENTS
-===================================================== */
-router.get("/events/list", async (req, res) => {
-  const userId = req.session.user.id;
+  if (!title || !event_date)
+    return res.json({ success: false, message: "Title and date required" });
+
   try {
-    const [clubs] = await db.promise().query(
-      `SELECT id FROM clubs WHERE club_head_id = ?`, [userId]
+    const [[club]] = await db.promise().query(
+      "SELECT name FROM clubs WHERE head_id = ?", [uid]
     );
-    if (!clubs.length) return res.json([]);
-    const clubId = clubs[0].id;
+    if (!club) return res.json({ success: false, message: "No club found" });
+
+    await db.promise().query(
+      `INSERT INTO events
+         (title, description, category, event_date, event_time, venue, organizer, seats)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [title, description||null, category||null, event_date,
+       event_time||null, venue||null, club.name, seats||null]
+    );
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error("Create event error:", err.message);
+    res.json({ success: false, message: err.message });
+  }
+});
+
+router.get("/events/list", clubMiddleware, async (req, res) => {
+  const uid = req.session.user.id;
+
+  try {
+    const [[club]] = await db.promise().query(
+      "SELECT name FROM clubs WHERE head_id = ?", [uid]
+    );
+    if (!club) return res.json([]);
 
     const [events] = await db.promise().query(
-      `SELECT e.*,
-              (SELECT COUNT(*) FROM event_registrations WHERE event_id = e.id) AS registration_count
+      `SELECT e.*, COUNT(er.id) AS registration_count
        FROM events e
-       WHERE e.club_id = ?
+       LEFT JOIN event_registrations er ON e.id = er.event_id
+       WHERE e.organizer = ?
+       GROUP BY e.id
        ORDER BY e.event_date DESC`,
-      [clubId]
+      [club.name]
     );
     res.json(events);
+
   } catch (err) {
-    console.error("EVENTS LIST ERROR:", err);
-    res.json([]);
+    console.error("Load events error:", err.message);
+    res.status(500).json({ error: err.message });
   }
 });
 
-
-/* =====================================================
-   GET EVENT REGISTRATIONS
-===================================================== */
-router.get("/events/registrations/:eventId", async (req, res) => {
-  const userId = req.session.user.id;
-  const eventId = req.params.eventId;
+router.get("/events/registrations/:event_id", clubMiddleware, async (req, res) => {
   try {
-    // Verify ownership
-    const [check] = await db.promise().query(
-      `SELECT e.id FROM events e
-       JOIN clubs c ON c.id = e.club_id
-       WHERE e.id = ? AND c.club_head_id = ?`,
-      [eventId, userId]
-    );
-    if (!check.length) return res.json([]);
-
     const [regs] = await db.promise().query(
       `SELECT u.username, u.email, u.prn, u.class_name
        FROM event_registrations er
-       JOIN users u ON u.id = er.user_id
+       JOIN users u ON er.user_id = u.id
        WHERE er.event_id = ?`,
-      [eventId]
+      [req.params.event_id]
     );
     res.json(regs);
   } catch (err) {
-    console.error("REGISTRATIONS ERROR:", err);
-    res.json([]);
+    console.error("Load registrations error:", err.message);
+    res.status(500).json({ error: err.message });
   }
 });
 
-
-/* =====================================================
-   POST ANNOUNCEMENT (notice)
-===================================================== */
-router.post("/announcements/post", async (req, res) => {
-  const userId = req.session.user.id;
+/* ═══════════════════════════════════════════
+   ANNOUNCEMENTS
+   notices schema: id, title, created_at,
+                   club_id, created_by
+   NO type column — removed from all queries
+═══════════════════════════════════════════ */
+router.post("/announcements/post", clubMiddleware, async (req, res) => {
   const { title } = req.body;
+  const uid = req.session.user.id;
 
-  if (!title) {
+  if (!title || !String(title).trim())
     return res.json({ success: false, message: "Announcement text required" });
-  }
 
   try {
-    const [clubs] = await db.promise().query(
-      `SELECT id FROM clubs WHERE club_head_id = ?`, [userId]
+    /* Get club_id to store with the notice */
+    const [[club]] = await db.promise().query(
+      "SELECT id FROM clubs WHERE head_id = ?", [uid]
     );
-    if (!clubs.length) return res.json({ success: false, message: "No club found" });
-    const clubId = clubs[0].id;
 
     await db.promise().query(
-      `INSERT INTO notices (title, club_id, created_by) VALUES (?, ?, ?)`,
-      [title, clubId, userId]
+      "INSERT INTO notices (title, created_by, club_id) VALUES (?, ?, ?)",
+      [String(title).trim(), uid, club ? club.id : null]
     );
     res.json({ success: true });
+
   } catch (err) {
-    console.error("ANNOUNCEMENT ERROR:", err);
+    console.error("Post announcement error:", err.message);
     res.json({ success: false, message: err.message });
   }
 });
 
+router.get("/announcements/list", clubMiddleware, async (req, res) => {
+  const uid = req.session.user.id;
 
-/* =====================================================
-   GET CLUB ANNOUNCEMENTS
-===================================================== */
-router.get("/announcements/list", async (req, res) => {
-  const userId = req.session.user.id;
   try {
-    const [clubs] = await db.promise().query(
-      `SELECT id FROM clubs WHERE club_head_id = ?`, [userId]
+    /* Get notices for this club head — filter by created_by since no type */
+    const [[club]] = await db.promise().query(
+      "SELECT id FROM clubs WHERE head_id = ?", [uid]
     );
-    if (!clubs.length) return res.json([]);
-    const clubId = clubs[0].id;
 
-    const [notices] = await db.promise().query(
-      `SELECT * FROM notices WHERE club_id = ? ORDER BY id DESC`,
-      [clubId]
-    );
+    let notices = [];
+    if (club) {
+      const [rows] = await db.promise().query(
+        `SELECT id, title, created_at
+         FROM notices
+         WHERE club_id = ?
+         ORDER BY created_at DESC`,
+        [club.id]
+      );
+      notices = rows;
+    }
     res.json(notices);
-  } catch (err) {
-    res.json([]);
-  }
-});
-
-
-/* =====================================================
-   UPLOAD CLUB RESOURCE (link-based, no file upload)
-===================================================== */
-router.post("/resources/add", async (req, res) => {
-  const userId = req.session.user.id;
-  const { title, subject, type, file_path } = req.body;
-
-  if (!title) return res.json({ success: false, message: "Title required" });
-
-  try {
-    const [clubs] = await db.promise().query(
-      `SELECT id FROM clubs WHERE club_head_id = ?`, [userId]
-    );
-    if (!clubs.length) return res.json({ success: false, message: "No club found" });
-    const clubId = clubs[0].id;
-
-    await db.promise().query(
-      `INSERT INTO resources (title, subject, type, file_path, uploaded_by, club_id)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [title, subject || null, type || "Notes", file_path || "#", userId, clubId]
-    );
-    res.json({ success: true });
-  } catch (err) {
-    console.error("RESOURCE ADD ERROR:", err);
-    res.json({ success: false, message: err.message });
-  }
-});
-
-
-/* =====================================================
-   ANALYTICS
-===================================================== */
-router.get("/analytics", async (req, res) => {
-  const userId = req.session.user.id;
-  try {
-    const [clubs] = await db.promise().query(
-      `SELECT id, name FROM clubs WHERE club_head_id = ?`, [userId]
-    );
-    if (!clubs.length) return res.json({ memberCount: 0, pendingCount: 0, eventCount: 0, upcomingEvents: 0 });
-    const clubId = clubs[0].id;
-
-    const [[mc]] = await db.promise().query(
-      `SELECT COUNT(*) AS count FROM user_clubs WHERE club_id = ? AND status = 'approved'`, [clubId]
-    );
-    const [[pc]] = await db.promise().query(
-      `SELECT COUNT(*) AS count FROM user_clubs WHERE club_id = ? AND status = 'pending'`, [clubId]
-    );
-    const [[ec]] = await db.promise().query(
-      `SELECT COUNT(*) AS count FROM events WHERE club_id = ?`, [clubId]
-    );
-    const [[ue]] = await db.promise().query(
-      `SELECT COUNT(*) AS count FROM events WHERE club_id = ? AND event_date >= CURDATE()`, [clubId]
-    );
-    const [recentMembers] = await db.promise().query(
-      `SELECT u.username, u.class_name FROM user_clubs uc
-       JOIN users u ON u.id = uc.user_id
-       WHERE uc.club_id = ? AND uc.status = 'approved'
-       ORDER BY uc.id DESC LIMIT 5`,
-      [clubId]
-    );
-
-    res.json({
-      memberCount: mc.count,
-      pendingCount: pc.count,
-      eventCount: ec.count,
-      upcomingEvents: ue.count,
-      recentMembers
-    });
 
   } catch (err) {
-    console.error("ANALYTICS ERROR:", err);
-    res.json({ memberCount: 0, pendingCount: 0, eventCount: 0, upcomingEvents: 0, recentMembers: [] });
+    console.error("Load announcements error:", err.message);
+    res.status(500).json({ error: err.message });
   }
 });
-
 
 module.exports = router;

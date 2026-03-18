@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Course Management | Faculty</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/dashboards/faculty/css/faculty-course-view.css">
+</head>
+<body>
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-badge">F</div>
+      <div class="brand-title">Campus Connect</div>
+      <div class="brand-sub">Faculty Portal</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-label">Main</div>
+      <a class="nav-link" href="/faculty/">⬛ Dashboard</a>
+      <a class="nav-link" href="/faculty/students">👨‍🎓 Students</a>
+      <a class="nav-link" href="/faculty/academics">📚 Academics</a>
+      <div class="nav-label">Tools</div>
+      <a class="nav-link" href="/faculty/attendance">✅ Attendance</a>
+      <a class="nav-link active" href="/faculty/courses">🎓 My Courses</a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="/logout" class="logout-link">🚪 Logout</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="label">Faculty Portal</div>
+        <div class="title" id="courseTitle">Course</div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-outline btn-sm" onclick="history.back()">← Back to Courses</button>
+        <div class="avatar" id="avatarLetter">F</div>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- COURSE HEADER CARD -->
+      <div class="course-hero-card" id="courseHeroCard">
+        <div class="course-hero-loading">Loading course...</div>
+      </div>
+
+      <!-- TABS -->
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="showTab('batches', this)">🏫 Batches</button>
+        <button class="tab-btn" onclick="showTab('assignments', this)">📝 Assignments</button>
+        <button class="tab-btn" onclick="showTab('students', this)">👨‍🎓 Students</button>
+        <button class="tab-btn" onclick="showTab('marks', this)">🎓 Marks</button>
+      </div>
+
+      <!-- ══════ TAB: BATCHES ══════ -->
+      <div id="tab-batches" class="tab-content">
+        <div class="grid-2">
+
+          <!-- Create Batch -->
+          <div class="card">
+            <div class="card-title">➕ Create New Batch</div>
+            <div class="field-group">
+              <label>Batch Name *</label>
+              <input id="bName" placeholder="e.g. TE-IT-A or Lab Batch 1">
+            </div>
+            <div class="field-group">
+              <label>Batch Type</label>
+              <select id="bType">
+                <option value="Lecture">📖 Lecture</option>
+                <option value="Lab">🔬 Lab</option>
+                <option value="Tutorial">✏️ Tutorial</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label>Division / Section (optional)</label>
+              <input id="bDivision" placeholder="e.g. A, B, C">
+            </div>
+            <button class="btn btn-primary btn-full" onclick="createBatch()">➕ Add Batch</button>
+            <div id="batchMsg" class="msg"></div>
+          </div>
+
+          <!-- Batch List -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">📋 Course Batches</div>
+              <button class="btn btn-outline btn-sm" onclick="loadBatches()">🔄 Refresh</button>
+            </div>
+            <div id="batchList">
+              <div class="empty-state"><span class="empty-icon">🏫</span><p>No batches yet</p></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ══════ TAB: ASSIGNMENTS ══════ -->
+      <div id="tab-assignments" class="tab-content" style="display:none;">
+        <div class="grid-2">
+
+          <!-- Create Assignment -->
+          <div class="card">
+            <div class="card-title">➕ Create Assignment</div>
+            <div class="field-group">
+              <label>Title *</label>
+              <input id="aTitle" placeholder="e.g. Unit 3 — Normalization Assignment">
+            </div>
+            <div class="field-group">
+              <label>Subject</label>
+              <input id="aSubject" placeholder="e.g. Database Management Systems">
+            </div>
+            <div class="field-group">
+              <label>Description</label>
+              <textarea id="aDesc" placeholder="Describe what students need to submit..."></textarea>
+            </div>
+            <div class="grid-2-sm">
+              <div class="field-group">
+                <label>Due Date *</label>
+                <input type="date" id="aDueDate">
+              </div>
+              <div class="field-group">
+                <label>Max Marks *</label>
+                <input type="number" id="aMaxMarks" placeholder="e.g. 25" min="1" max="1000" value="25">
+              </div>
+            </div>
+            <div class="field-group">
+              <label>Submission Type</label>
+              <select id="aSubmissionType">
+                <option value="document">📄 Document Upload</option>
+                <option value="text">✍️ Text Entry</option>
+                <option value="both">📄✍️ Both</option>
+              </select>
+            </div>
+            <button class="btn btn-primary btn-full" onclick="createAssignment()">➕ Create Assignment</button>
+            <div id="assignMsg" class="msg"></div>
+          </div>
+
+          <!-- Assignment List -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">📋 Assignments</div>
+              <span id="assignCountBadge" class="badge badge-blue">0</span>
+            </div>
+            <div id="assignmentList">
+              <div class="empty-state"><span class="empty-icon">📝</span><p>No assignments yet</p></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ══════ TAB: STUDENTS ══════ -->
+      <div id="tab-students" class="tab-content" style="display:none;">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">👨‍🎓 Enrolled Students</div>
+              <div class="card-sub" id="studentCountLabel">Loading...</div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <input id="searchStudent" placeholder="🔍 Search..." style="width:220px;" oninput="filterStudents()">
+              <select id="batchFilter" style="width:140px;" onchange="filterStudents()">
+                <option value="">All Batches</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>#</th><th>Student</th><th>PRN</th><th>Batch</th><th>Lecture Att.</th><th>Lab Att.</th>
+                </tr>
+              </thead>
+              <tbody id="studentTableBody">
+                <tr><td colspan="6" class="table-empty">Loading students...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════ TAB: MARKS ══════ -->
+      <div id="tab-marks" class="tab-content" style="display:none;">
+        <div class="grid-2">
+
+          <!-- Give Marks -->
+          <div class="card">
+            <div class="card-title">🎯 Award Marks</div>
+            <div class="field-group">
+              <label>Assignment *</label>
+              <select id="marksAssignment" onchange="onAssignmentSelect()">
+                <option value="">Select Assignment</option>
+              </select>
+            </div>
+            <div id="maxMarksDisplay" class="marks-info-bar" style="display:none;">
+              <span>Max Marks: <strong id="maxMarksValue">—</strong></span>
+            </div>
+            <div class="field-group">
+              <label>Student *</label>
+              <select id="marksStudent">
+                <option value="">Select Student</option>
+              </select>
+            </div>
+            <div class="grid-2-sm">
+              <div class="field-group">
+                <label>Marks Obtained *</label>
+                <input type="number" id="marksObtained" placeholder="e.g. 22" min="0">
+              </div>
+              <div class="field-group">
+                <label>Out Of</label>
+                <input type="number" id="marksOutOf" placeholder="e.g. 25" min="1" readonly style="background:#f3f4f6;">
+              </div>
+            </div>
+            <div class="field-group">
+              <label>Feedback (optional)</label>
+              <textarea id="marksFeedback" placeholder="Comments for the student..."></textarea>
+            </div>
+            <button class="btn btn-primary btn-full" onclick="awardMarks()">💾 Save Marks</button>
+            <div id="marksMsg" class="msg"></div>
+          </div>
+
+          <!-- Marks Leaderboard -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">📊 Marks Overview</div>
+              <select id="marksViewAssignment" onchange="loadMarksOverview()" style="font-size:12px;">
+                <option value="">All Assignments</option>
+              </select>
+            </div>
+            <div id="marksOverviewTable">
+              <div class="empty-state"><span class="empty-icon">📊</span><p>Select an assignment to see marks</p></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="/dashboards/faculty/js/faculty-course-view.js"></script>
+</body>
+</html>

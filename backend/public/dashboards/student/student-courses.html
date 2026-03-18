@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Courses | Campus Connect</title>
+<link rel="stylesheet" href="/dashboards/student/css/student-courses.css">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand"><div class="brand-icon">CC</div><span class="brand-name">Campus Connect</span></div>
+    <nav class="nav">
+      <a href="/dashboard" class="nav-link">⬛ Dashboard</a>
+      <a href="/dashboards/student/profile.html" class="nav-link">👤 Profile</a>
+      <a href="/common/events/events.html" class="nav-link">🎉 Events</a>
+      <a href="/dashboards/student/student-courses.html" class="nav-link active">🎓 My Courses</a>
+      <a href="/dashboards/student/academics.html" class="nav-link">📊 Academics</a>
+      <a href="/dashboards/student/notifications.html" class="nav-link">🔔 Notifications</a>
+    </nav>
+    <a href="/logout" class="logout-btn">🚪 Logout</a>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div><div class="topbar-label">Student</div><div class="topbar-name">My Courses</div></div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="btn btn-primary btn-sm" onclick="openEnrollModal()">🔑 Enroll via Key</button>
+        <div class="avatar" id="avatarLetter">S</div>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- ALERTS -->
+      <div id="alertsSection"></div>
+
+      <!-- TABS -->
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="showTab('enrolled',this)">📋 My Courses</button>
+        <button class="tab-btn" onclick="showTab('browse',this)">🔍 Browse Courses</button>
+      </div>
+
+      <!-- MY COURSES TAB -->
+      <div id="tab-enrolled">
+        <div id="enrolledGrid" class="courses-grid">
+          <div class="empty-state"><span class="empty-icon">🎓</span><p>Loading your courses...</p></div>
+        </div>
+      </div>
+
+      <!-- BROWSE TAB -->
+      <div id="tab-browse" style="display:none;">
+        <div class="search-bar" style="margin-bottom:6px;">
+          <input id="searchCourse" placeholder="🔍 Search courses..." oninput="filterBrowse()" class="search-input">
+          <select id="semFilter" onchange="filterBrowse()" class="sem-filter">
+            <option value="">All Semesters</option>
+            <option value="1">Sem 1</option><option value="2">Sem 2</option>
+            <option value="3">Sem 3</option><option value="4">Sem 4</option>
+            <option value="5">Sem 5</option><option value="6">Sem 6</option>
+            <option value="7">Sem 7</option><option value="8">Sem 8</option>
+          </select>
+          <span id="browseCount" style="font-size:13px;color:var(--muted);"></span>
+        </div>
+        <div id="browseGrid" class="courses-grid">
+          <div class="empty-state"><span class="empty-icon">🔍</span><p>Loading...</p></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- ENROLL BY KEY MODAL -->
+<div class="modal-overlay" id="enrollKeyModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">🔑 Enroll via Key</div>
+      <button class="modal-close" onclick="closeEnrollModal()">✕</button>
+    </div>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:18px;">
+      Enter the enrollment key given by your faculty to join the course.
+    </p>
+    <div class="field-group">
+      <label>Enrollment Key *</label>
+      <input type="text" id="enrollKeyInput" placeholder="e.g. AB3X9KPQ" style="text-transform:uppercase;letter-spacing:3px;font-family:monospace;font-size:16px;" maxlength="8">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary btn-full" onclick="enrollByKey()">✅ Enroll</button>
+      <button class="btn btn-outline" onclick="closeEnrollModal()">Cancel</button>
+    </div>
+    <div id="enrollKeyMsg" class="msg"></div>
+  </div>
+</div>
+
+<!-- ATTENDANCE HISTORY MODAL -->
+<div class="modal-overlay" id="sessionModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="sessionModalTitle">Attendance</div>
+      <button class="modal-close" onclick="closeSessionModal()">✕</button>
+    </div>
+    <div id="sessionModalBody"></div>
+  </div>
+</div>
+
+<!-- ASSIGNMENTS MODAL -->
+<div class="modal-overlay" id="assignModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="assignModalTitle">Assignments</div>
+      <button class="modal-close" onclick="closeAssignModal()">✕</button>
+    </div>
+    <div id="assignModalBody"></div>
+  </div>
+</div>
+
+<script src="/dashboards/student/js/student-courses.js"></script>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Course Detail | Student</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/dashboards/student/css/student-course-detail.css">
+</head>
+<body>
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">CC</div>
+      <span class="brand-name">Campus Connect</span>
+    </div>
+    <nav class="nav">
+      <a href="/dashboard" class="nav-link">⬛ Dashboard</a>
+      <a href="/dashboards/student/profile.html" class="nav-link">👤 Profile</a>
+      <a href="/common/events/events.html" class="nav-link">🎉 Events</a>
+      <a href="/dashboards/student/student-courses.html" class="nav-link active">🎓 My Courses</a>
+      <a href="/dashboards/student/academics.html" class="nav-link">📊 Academics</a>
+      <a href="/dashboards/student/notifications.html" class="nav-link">🔔 Notifications</a>
+    </nav>
+    <a href="/logout" class="logout-btn">🚪 Logout</a>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <p class="topbar-label">My Course</p>
+        <h1 class="topbar-name" id="courseTitle">Loading...</h1>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="btn btn-outline btn-sm" onclick="history.back()">← Back</button>
+        <div class="avatar" id="avatarLetter">S</div>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- COURSE HERO -->
+      <div class="course-hero" id="courseHero">
+        <div style="color:rgba(255,255,255,.5);">Loading course details...</div>
+      </div>
+
+      <!-- TABS -->
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="showTab('assignments', this)">📝 Assignments</button>
+        <button class="tab-btn" onclick="showTab('attendance', this)">✅ My Attendance</button>
+        <button class="tab-btn" onclick="showTab('marks', this)">🎯 My Marks</button>
+      </div>
+
+      <!-- ══════ TAB: ASSIGNMENTS ══════ -->
+      <div id="tab-assignments" class="tab-content">
+        <div id="assignmentCards">
+          <div class="empty-state"><span class="empty-icon">⏳</span><p>Loading assignments...</p></div>
+        </div>
+      </div>
+
+      <!-- ══════ TAB: ATTENDANCE ══════ -->
+      <div id="tab-attendance" class="tab-content" style="display:none;">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">✅ My Attendance History</div>
+            <div id="attSummaryChips" style="display:flex;gap:8px;"></div>
+          </div>
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr><th>Date</th><th>Type</th><th>Topic</th><th>Status</th></tr>
+              </thead>
+              <tbody id="attendanceTableBody">
+                <tr><td colspan="4" class="table-empty">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════ TAB: MARKS ══════ -->
+      <div id="tab-marks" class="tab-content" style="display:none;">
+        <div id="marksCards">
+          <div class="empty-state"><span class="empty-icon">⏳</span><p>Loading marks...</p></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- SUBMIT ASSIGNMENT MODAL -->
+<div class="modal-overlay" id="submitModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">📤 Submit Assignment</div>
+      <button class="modal-close" onclick="closeSubmitModal()">✕</button>
+    </div>
+    <div id="submitModalAssignName" style="font-size:14px;color:var(--muted);margin-bottom:16px;"></div>
+    <input type="hidden" id="submitAssignId">
+
+    <div class="field-group">
+      <label>Text Response</label>
+      <textarea id="submitText" placeholder="Write your answer here..." style="min-height:120px;"></textarea>
+    </div>
+    <div class="field-group">
+      <label>File Upload (optional)</label>
+      <input type="file" id="submitFile" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.zip">
+      <div style="font-size:11px;color:var(--muted);margin-top:4px;">PDF, Word, PPT, TXT, ZIP — Max 20MB</div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-primary btn-full" onclick="submitAssignment()">📤 Submit</button>
+      <button class="btn btn-outline" onclick="closeSubmitModal()">Cancel</button>
+    </div>
+    <div id="submitMsg" class="msg"></div>
+  </div>
+</div>
+
+<script src="/dashboards/student/js/student-course-detail.js"></script>
+</body>
+</html>

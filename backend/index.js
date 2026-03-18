@@ -101,6 +101,7 @@ app.use("/alumni",       require("./routes/alumni"));
 app.use("/faculty",      require("./routes/faculty"));
 app.use("/club",         require("./routes/club"));
 app.use("/notifications",require("./routes/notifications"));
+app.use("/courses", require("./routes/courses"));
 
 /* ─────────────────────────────────────────
    7. DEFAULT — root redirect

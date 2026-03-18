@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mark Attendance | Faculty</title>
+  <link rel="stylesheet" href="/dashboards/faculty/css/faculty-attendance.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-badge">F</div>
+      <div class="brand-title">Campus Connect</div>
+      <div class="brand-sub">Faculty Portal</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-label">Main</div>
+      <a class="nav-link" href="/faculty/">⬛ Dashboard</a>
+      <a class="nav-link" href="/faculty/students">👨‍🎓 Students</a>
+      <a class="nav-link" href="/faculty/academics">📚 Academics</a>
+      <div class="nav-label">Tools</div>
+      <a class="nav-link active" href="/faculty/attendance">✅ Attendance</a>
+      <a class="nav-link" href="/faculty/grades">🎓 Grades</a>
+      <a class="nav-link" href="/faculty/resources">📂 Resources</a>
+      <a class="nav-link" href="/faculty/notify">📣 Notify</a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="/logout" class="logout-link">🚪 Logout</a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="label">Faculty Portal</div>
+        <div class="title" id="pageTitle">Attendance</div>
+      </div>
+      <div class="avatar-wrap">
+        <div class="avatar" id="avatarLetter">F</div>
+        <span id="facultyName">Faculty</span>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- MAIN TABS -->
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="showMainTab('mark', this)">✅ Mark Attendance</button>
+        <button class="tab-btn" onclick="showMainTab('sessions', this)">📋 Session History</button>
+        <button class="tab-btn" onclick="showMainTab('courses', this)">📚 Manage Courses</button>
+      </div>
+
+      <!-- ══════════════════════════════
+           TAB 1: MARK ATTENDANCE
+      ══════════════════════════════ -->
+      <div id="tab-mark">
+
+        <!-- WIZARD STEPS -->
+        <div class="wizard-steps">
+          <div class="step active" id="step1">
+            <div class="step-num">1</div>
+            <span class="step-label">Select Course</span>
+          </div>
+          <div class="step-line" id="line1"></div>
+          <div class="step" id="step2">
+            <div class="step-num">2</div>
+            <span class="step-label">Select Batch</span>
+          </div>
+          <div class="step-line" id="line2"></div>
+          <div class="step" id="step3">
+            <div class="step-num">3</div>
+            <span class="step-label">Session Details</span>
+          </div>
+          <div class="step-line" id="line3"></div>
+          <div class="step" id="step4">
+            <div class="step-num">4</div>
+            <span class="step-label">Mark Students</span>
+          </div>
+        </div>
+
+        <!-- PANEL 1: CHOOSE COURSE -->
+        <div class="wizard-panel active card" id="panel1">
+          <div class="card-title">📚 Choose Course</div>
+          <div id="courseGrid" class="grid-3">
+            <div class="empty-state" style="grid-column:1/-1;">
+              <span class="empty-icon">📚</span>
+              <p>Loading your courses...</p>
+            </div>
+          </div>
+          <div class="panel-footer">
+            <button class="btn btn-outline btn-sm" onclick="showCourseManager()">
+              ⚙️ Manage Courses &amp; Batches
+            </button>
+          </div>
+        </div>
+
+        <!-- PANEL 2: CHOOSE BATCH -->
+        <div class="wizard-panel card" id="panel2">
+          <div class="card-header">
+            <div class="card-title">🏫 Choose Batch</div>
+            <button class="btn btn-outline btn-sm" onclick="goToStep(1)">← Back</button>
+          </div>
+          <p class="panel-course-label">
+            Course: <strong id="selectedCourseName">—</strong>
+          </p>
+          <div id="batchGrid" class="grid-3">
+            <div class="empty-state" style="grid-column:1/-1;">
+              <span class="empty-icon">🏫</span>
+              <p>Loading batches...</p>
+            </div>
+          </div>
+          <div class="panel-footer">
+            <button class="btn btn-outline btn-sm" onclick="showBatchManager()">
+              ⚙️ Add / Manage Batches
+            </button>
+          </div>
+        </div>
+
+        <!-- PANEL 3: SESSION DETAILS -->
+        <div class="wizard-panel card" id="panel3">
+          <div class="card-header">
+            <div class="card-title">📝 Session Details</div>
+            <button class="btn btn-outline btn-sm" onclick="goToStep(2)">← Back</button>
+          </div>
+          <p class="panel-course-label">
+            <strong id="sess-course-name">—</strong> &nbsp;›&nbsp; <strong id="sess-batch-name">—</strong>
+          </p>
+          <div class="input-row">
+            <div class="input-group">
+              <label>Session Type</label>
+              <select id="sessionType">
+                <option value="Lecture">📖 Lecture</option>
+                <option value="Lab">🔬 Lab</option>
+                <option value="Tutorial">✏️ Tutorial</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label>Date *</label>
+              <input type="date" id="sessionDate">
+            </div>
+            <div class="input-group input-group--flex">
+              <label>Topic (optional)</label>
+              <input id="sessionTopic" placeholder="e.g. Normalization — 2NF &amp; 3NF">
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="goToStep(4)">Load Students →</button>
+        </div>
+
+        <!-- PANEL 4: MARK STUDENTS -->
+        <div class="wizard-panel card" id="panel4">
+          <div class="card-header">
+            <div>
+              <div class="card-title">✅ Mark Attendance</div>
+              <div class="session-info-label" id="mark-session-info">—</div>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="goToStep(3)">← Back</button>
+          </div>
+
+          <!-- Summary bar -->
+          <div class="summary-bar">
+            <div class="sum-item"><div class="sum-dot present"></div><span id="sum-present">0 Present</span></div>
+            <div class="sum-item"><div class="sum-dot late"></div><span id="sum-late">0 Late</span></div>
+            <div class="sum-item"><div class="sum-dot absent"></div><span id="sum-absent">0 Absent</span></div>
+            <span class="sum-pct" id="sum-pct">0% present</span>
+          </div>
+
+          <!-- Quick mark all -->
+          <div class="quick-row">
+            <span class="quick-label">Mark all as:</span>
+            <button class="mark-all-btn present" onclick="markAll('present')">✅ All Present</button>
+            <button class="mark-all-btn late"    onclick="markAll('late')">⏰ All Late</button>
+            <button class="mark-all-btn absent"  onclick="markAll('absent')">❌ All Absent</button>
+            <div class="spacer"></div>
+            <input id="searchStudent" placeholder="🔍 Search student..." class="search-input" oninput="filterStudentList()">
+          </div>
+
+          <!-- Student list -->
+          <div class="student-list-wrap">
+            <div class="student-list-header">
+              <span>Student</span>
+              <span>PRN</span>
+              <span>Present</span>
+              <span>Late</span>
+              <span>Absent</span>
+            </div>
+            <div id="studentAttendanceList">
+              <div class="empty-state">
+                <span class="empty-icon">👨‍🎓</span>
+                <p>No students loaded</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="submit-row">
+            <button class="btn btn-primary" onclick="submitAttendance()" id="submitBtn">
+              💾 Save Attendance
+            </button>
+            <span class="submit-hint">All students marked as Absent by default</span>
+          </div>
+          <div id="submitMsg" class="msg"></div>
+        </div>
+
+      </div><!-- /tab-mark -->
+
+      <!-- ══════════════════════════════
+           TAB 2: SESSION HISTORY
+      ══════════════════════════════ -->
+      <div id="tab-sessions" style="display:none;">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📋 Session History</div>
+            <div class="filter-actions">
+              <select id="histCourseFilter" onchange="loadSessions()">
+                <option value="">All Courses</option>
+              </select>
+              <button class="btn btn-outline btn-sm" onclick="loadSessions()">🔄 Refresh</button>
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table class="sessions-table">
+              <thead>
+                <tr>
+                  <th>Date</th><th>Course</th><th>Batch</th>
+                  <th>Type</th><th>Topic</th><th>Present</th><th>Total</th><th>%</th>
+                </tr>
+              </thead>
+              <tbody id="sessionsTableBody">
+                <tr>
+                  <td colspan="8" class="table-empty">Select a course to view sessions</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════
+           TAB 3: MANAGE COURSES & BATCHES
+      ══════════════════════════════ -->
+      <div id="tab-courses" style="display:none;">
+        <div class="grid-2">
+
+          <!-- CREATE COURSE -->
+          <div class="card">
+            <div class="card-title">➕ Add New Course</div>
+            <div class="input-group">
+              <label>Course Name *</label>
+              <input id="cName" placeholder="e.g. Database Management Systems">
+            </div>
+            <div class="grid-2">
+              <div class="input-group">
+                <label>Course Code</label>
+                <input id="cCode" placeholder="e.g. CS301">
+              </div>
+              <div class="input-group">
+                <label>Semester</label>
+                <select id="cSem">
+                  <option value="">—</option>
+                  <option value="1">Sem 1</option><option value="2">Sem 2</option>
+                  <option value="3">Sem 3</option><option value="4">Sem 4</option>
+                  <option value="5">Sem 5</option><option value="6">Sem 6</option>
+                  <option value="7">Sem 7</option><option value="8">Sem 8</option>
+                </select>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>Description (optional)</label>
+              <textarea id="cDesc" placeholder="Brief course description..."></textarea>
+            </div>
+            <button class="btn btn-primary btn-full" onclick="createCourse()">➕ Create Course</button>
+            <div id="courseMsg" class="msg"></div>
+          </div>
+
+          <!-- MY COURSES LIST -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">📚 My Courses</div>
+              <button class="btn btn-outline btn-sm" onclick="loadMyCourses()">🔄 Refresh</button>
+            </div>
+            <div id="myCoursesList">
+              <div class="empty-state"><span class="empty-icon">📚</span><p>No courses yet. Create one!</p></div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- BATCH MANAGER (shown when clicking Batches on a course) -->
+        <div class="card batch-manager-card" id="batchManagerCard" style="display:none;">
+          <div class="card-header">
+            <div>
+              <div class="card-title">🏫 Manage Batches</div>
+              <div class="batch-manager-course" id="batchMgrCourseName">—</div>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="closeBatchManager()">✕ Close</button>
+          </div>
+          <div class="grid-2">
+            <div>
+              <div class="input-group">
+                <label>Batch Name *</label>
+                <input id="bName" placeholder="e.g. TE-IT-A or Lab Batch 1">
+              </div>
+              <div class="input-group">
+                <label>Type</label>
+                <select id="bType">
+                  <option value="Lecture">📖 Lecture</option>
+                  <option value="Lab">🔬 Lab</option>
+                  <option value="Tutorial">✏️ Tutorial</option>
+                </select>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="createBatch()">➕ Add Batch</button>
+              <div id="batchMsg" class="msg"></div>
+            </div>
+            <div id="batchList">
+              <div class="empty-state"><span class="empty-icon">🏫</span><p>No batches yet</p></div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /tab-courses -->
+
+    </div><!-- /content -->
+  </main>
+</div>
+
+<script src="/dashboards/faculty/js/faculty-attendance.js"></script>
+</body>
+</html>

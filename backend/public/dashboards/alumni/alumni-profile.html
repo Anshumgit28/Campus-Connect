@@ -44,34 +44,6 @@
   </main>
 </div>
 
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  fetch("/alumni/profile", { credentials: "include" })
-    .then(r => r.json())
-    .then(data => {
-      if (!data) return;
-      ["full_name","graduation_year","degree","company","job_title","work_location","linkedin"].forEach(key => {
-        const el = document.getElementById(key);
-        if (el && data[key]) el.value = data[key];
-      });
-    });
-
-  document.getElementById("saveBtn").addEventListener("click", async () => {
-    const body = {};
-    ["full_name","graduation_year","degree","company","job_title","work_location","linkedin"].forEach(k => {
-      body[k] = document.getElementById(k).value;
-    });
-    const res = await fetch("/alumni/profile/update", {
-      method: "POST", credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
-    const d = await res.json();
-    const msg = document.getElementById("saveMsg");
-    msg.style.color = d.success ? "green" : "red";
-    msg.innerText = d.success ? "✅ Profile updated!" : "❌ Failed to save";
-  });
-});
-</script>
+<script src="/dashboards/alumni/js/alumni-profile.js"></script>
 </body>
 </html>

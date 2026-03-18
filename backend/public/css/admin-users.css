@@ -1,0 +1,204 @@
+/* ===================
+ADMIN USERS - ENHANCED STYLES
+=====================*/
+
+/* User Info Cell */
+.user-info-cell {
+  min-width: 200px;
+}
+
+.user-info-cell strong {
+  font-size: 14px;
+  color: #111827;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.user-info-cell .email {
+  font-size: 12px;
+  color: #6b7280;
+  display: block;
+}
+
+.user-info-cell .meta {
+  font-size: 11px;
+  color: #9ca3af;
+  margin-top: 2px;
+}
+
+/* Role Cell */
+.role-cell {
+  min-width: 140px;
+}
+
+.role-cell select {
+  width: 100%;
+  margin-bottom: 6px;
+}
+
+/* Club Cell */
+.club-cell {
+  min-width: 150px;
+}
+
+.club-info {
+  margin-bottom: 6px;
+}
+
+.club-info strong {
+  font-size: 12px;
+  color: #111827;
+  display: block;
+}
+
+.club-info .position {
+  font-size: 11px;
+  color: #6b7280;
+  display: block;
+  margin-top: 2px;
+}
+
+.no-club {
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+/* Actions Cell */
+.actions-cell {
+  min-width: 180px;
+}
+
+/* Status Animations */
+.status-badge {
+  transition: all 0.3s ease;
+}
+
+.status-badge.pulse {
+  animation: pulse 0.5s ease;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Loading State */
+.loading-row {
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Empty State */
+.empty-state {
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.empty-state-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-state-text {
+  color: #6b7280;
+  font-size: 16px;
+}
+
+/* Filter Count Badge */
+.filter-count {
+  background: #6366f1;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Modal Enhancements */
+.modal-field {
+  margin-bottom: 16px;
+}
+
+.modal-field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.modal-actions button {
+  flex: 1;
+}
+
+/* Success/Error Messages */
+.message-success {
+  color: #22c55e;
+  font-weight: 600;
+  padding: 12px;
+  border-radius: 8px;
+  background: #dcfce7;
+  border: 1px solid #22c55e;
+  text-align: center;
+  animation: slideDown 0.3s ease;
+}
+
+.message-error {
+  color: #ef4444;
+  font-weight: 600;
+  padding: 12px;
+  border-radius: 8px;
+  background: #fee2e2;
+  border: 1px solid #ef4444;
+  text-align: center;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Scrollbar Styling */
+.table-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: #6366f1;
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: #4f46e5;
+}

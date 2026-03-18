@@ -1,0 +1,50 @@
+"use strict";
+
+let allAlumni = [];
+
+document.addEventListener("DOMContentLoaded", loadDirectory);
+
+function loadDirectory() {
+  fetch("/alumni/directory", { credentials: "include" })
+    .then(r => r.json())
+    .then(alumni => {
+      allAlumni = alumni;
+      renderAlumni(alumni);
+    })
+    .catch(err => console.error("Directory load error:", err));
+}
+
+function renderAlumni(alumni) {
+  const el = document.getElementById("alumniGrid");
+  
+  if (!alumni.length) { 
+    el.innerHTML = "<p style='color:var(--muted);'>No alumni profiles found</p>"; 
+    return; 
+  }
+  
+  el.innerHTML = alumni.map(a => `
+    <div class="snap-card" style="min-width:220px; max-width:280px;">
+      <div style="width:48px; height:48px; background:linear-gradient(135deg,var(--primary),var(--secondary)); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-weight:800; font-size:20px; margin-bottom:12px;">
+        ${(a.full_name||"?")[0].toUpperCase()}
+      </div>
+      <h3 style="font-size:15px; font-weight:700;">${a.full_name||"Unknown"}</h3>
+      <p style="font-size:13px; color:var(--muted); margin-top:4px;">${a.degree||""} ${a.graduation_year ? "· "+a.graduation_year : ""}</p>
+      ${a.company ? `<p style="font-size:13px; margin-top:6px;"><strong>${a.company}</strong></p>` : ""}
+      ${a.job_title ? `<p style="font-size:13px; color:var(--muted);">${a.job_title}</p>` : ""}
+      ${a.work_location ? `<p style="font-size:12px; color:var(--muted);">📍 ${a.work_location}</p>` : ""}
+      ${a.linkedin ? `<a href="${a.linkedin}" target="_blank" style="display:inline-block; margin-top:10px; padding:7px 14px; border-radius:8px; border:none; background:var(--primary); color:white; font-size:12px; font-weight:600; text-decoration:none;">Connect →</a>` : ""}
+    </div>
+  `).join("");
+}
+
+function filterAlumni() {
+  const q = document.getElementById("searchInput").value.toLowerCase();
+  
+  const filtered = allAlumni.filter(a =>
+    (a.full_name||"").toLowerCase().includes(q) ||
+    (a.company||"").toLowerCase().includes(q) ||
+    (a.degree||"").toLowerCase().includes(q)
+  );
+  
+  renderAlumni(filtered);
+}

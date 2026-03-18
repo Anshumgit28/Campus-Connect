@@ -1,0 +1,85 @@
+/* ============================================
+   ACADEMICS PAGE — academics.css
+============================================ */
+
+.acad-wrap {
+  padding: 24px 36px;
+}
+
+/* ── TAB BAR ── */
+.tab-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.tab {
+  padding: 9px 18px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+}
+
+.tab:hover {
+  background: #eef2ff;
+  color: var(--indigo);
+  border-color: #c7d2fe;
+}
+
+.tab.active {
+  background: var(--indigo);
+  color: white;
+  border-color: var(--indigo);
+}
+
+/* ── TAB PANEL ── */
+.tab-panel {
+  animation: fadeIn .2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── GRADES GRID ── */
+.grades-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 6px;
+}
+
+.grade-chip {
+  padding: 14px 22px;
+  border-radius: 12px;
+  text-align: center;
+  min-width: 100px;
+}
+
+.grade-chip .grade-letter {
+  font-family: 'DM Serif Display', serif;
+  font-size: 32px;
+  display: block;
+  line-height: 1;
+}
+
+.grade-chip .grade-subject {
+  font-size: 12px;
+  margin-top: 6px;
+  opacity: .75;
+  display: block;
+}
+
+@media (max-width: 700px) {
+  .acad-wrap { padding: 16px 20px; }
+  .tab-bar   { gap: 6px; }
+  .tab       { padding: 8px 12px; font-size: 12px; }
+}

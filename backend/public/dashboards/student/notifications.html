@@ -2,102 +2,43 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Notifications | Campus Connect</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notifications | Student Dashboard</title>
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body class="dashboard-body">
-
 <div class="layout">
+
   <aside class="sidebar">
     <div class="logo-icon">S</div>
-
     <a href="/dashboard">🏠 Dashboard</a>
     <a href="/dashboards/student/profile.html">👤 Profile</a>
-    <a href="/common/events/events.html">🎉 Events</a>
-    <a href="/common/resources/resources.html">📚 Resources</a>
     <a href="/dashboards/student/academics.html">📊 Academics</a>
-
-    <a href="/dashboards/student/notifications.html">
-      🔔 Notifications
-      <span id="notifBadge"
-        style="background:#ef4444; color:white; font-size:11px;
-        padding:2px 6px; border-radius:10px;
-        display:none; margin-left:4px;">
-        0
-      </span>
-    </a>
-
+    <a href="/dashboards/student/notifications.html">🔔 Notifications</a>
     <a href="/logout">🚪 Logout</a>
   </aside>
 
   <main class="dashboard">
     <section class="greeting">
       <h1>🔔 Notifications</h1>
-      <p>Stay updated with campus announcements</p>
+      <p>Stay updated with important announcements</p>
     </section>
 
     <section class="card" style="width:100%; flex:none;">
-      <div style="display:flex; justify-content:space-between;
-        align-items:center; margin-bottom:18px;
-        flex-wrap:wrap; gap:10px;">
-
-        <h2>
-          All Notifications
-          <span id="unreadCount"
-            style="font-size:14px; color:var(--muted);
-            font-weight:400; margin-left:8px;">
-          </span>
-        </h2>
-
-        <!-- ✅ FIXED BUTTON -->
-        <button onclick="Notifications.markAllRead()"
-          style="padding:9px 18px; border-radius:10px;
-          border:none; background:var(--primary);
-          color:white; font-weight:600;
-          cursor:pointer; font-size:13px;">
-          ✅ Mark All Read
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2>All Notifications</h2>
+        <button onclick="NotificationsPage.markAllRead()"
+          style="padding:8px 16px; border-radius:8px; border:1px solid var(--border); background:white; cursor:pointer; font-weight:600;">
+          Mark All Read
         </button>
-
       </div>
-
-      <div id="notifContainer"
-        style="display:flex; flex-direction:column; gap:10px;">
-        <p style="color:var(--muted);">Loading...</p>
-      </div>
+      <div id="notificationsList"></div>
     </section>
   </main>
 </div>
 
+<script src="/js/modules/api.js"></script>
 <script src="/common/notifications/notifications.js"></script>
-
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-
-  // Load notifications list
-  Notifications.loadNotifications("notifContainer");
-
-  // Load unread count
-  fetch("/notifications/count", { credentials: "include" })
-    .then(r => r.json())
-    .then(d => {
-
-      const el = document.getElementById("unreadCount");
-      el.innerText = d.count > 0
-        ? `(${d.count} unread)`
-        : "(all read)";
-
-      const badge = document.getElementById("notifBadge");
-
-      if (d.count > 0) {
-        badge.innerText = d.count;
-        badge.style.display = "inline";
-      } else {
-        badge.style.display = "none";
-      }
-    })
-    .catch(err => console.error("Count load error:", err));
-});
-</script>
-
+<script src="/dashboards/student/js/notifications.js"></script>
 </body>
 </html>

@@ -1,163 +1,190 @@
 "use strict";
 
-const express     = require("express");
-const router      = express.Router();
-const db          = require("../db");
-const path        = require("path");
-const auth        = require("../middleware/authMiddleware");
-const alumniOnly  = require("../middleware/alumniMiddleware");
+const express = require("express");
+const router  = express.Router();
+const db      = require("../db");
+const path    = require("path");
+const auth    = require("../middleware/authMiddleware");
+const alumniMiddleware = require("../middleware/alumniMiddleware");
 
-/* ─────────────────────────────────────────
-   PAGES
-───────────────────────────────────────── */
-router.get("/dashboard",       auth, alumniOnly, (req, res) =>
+router.use(auth);
+
+/* ── HTML PAGES ── */
+router.get("/dashboard", alumniMiddleware, (req, res) =>
   res.sendFile(path.join(__dirname, "../public/dashboards/alumni/alumni-dashboard.html")));
 
-router.get("/profile-page",    auth, alumniOnly, (req, res) =>
+router.get("/profile-page", alumniMiddleware, (req, res) =>
   res.sendFile(path.join(__dirname, "../public/dashboards/alumni/alumni-profile.html")));
 
-router.get("/directory-page",  auth, alumniOnly, (req, res) =>
+router.get("/directory-page", auth, (req, res) =>
   res.sendFile(path.join(__dirname, "../public/dashboards/alumni/alumni-directory.html")));
 
-/* ─────────────────────────────────────────
-   PROFILE LOAD
-───────────────────────────────────────── */
-router.get("/profile", auth, alumniOnly, async (req, res) => {
+/* ── PROFILE ── */
+router.get("/profile", alumniMiddleware, async (req, res) => {
   try {
     const [rows] = await db.promise().query(
-      "SELECT * FROM alumni_profiles WHERE user_id = ?",
-      [req.session.user.id]
+      "SELECT * FROM alumni_profiles WHERE user_id=?", [req.session.user.id]
     );
     res.json(rows[0] || {});
-  } catch (e) {
-    console.error("ALUMNI PROFILE LOAD ERR:", e);
-    res.json({});
-  }
+  } catch (e) { res.json({}); }
 });
 
-/* ─────────────────────────────────────────
-   PROFILE UPDATE (UPSERT)
-───────────────────────────────────────── */
-router.post("/profile/update", auth, alumniOnly, async (req, res) => {
+router.post("/profile/update", alumniMiddleware, async (req, res) => {
   const { full_name, graduation_year, degree, company, job_title, work_location, linkedin } = req.body;
   try {
     await db.promise().query(
       `INSERT INTO alumni_profiles
          (user_id, full_name, graduation_year, degree, company, job_title, work_location, linkedin)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+       VALUES (?,?,?,?,?,?,?,?)
        ON DUPLICATE KEY UPDATE
-         full_name       = VALUES(full_name),
-         graduation_year = VALUES(graduation_year),
-         degree          = VALUES(degree),
-         company         = VALUES(company),
-         job_title       = VALUES(job_title),
-         work_location   = VALUES(work_location),
-         linkedin        = VALUES(linkedin)`,
+         full_name=VALUES(full_name), graduation_year=VALUES(graduation_year),
+         degree=VALUES(degree), company=VALUES(company), job_title=VALUES(job_title),
+         work_location=VALUES(work_location), linkedin=VALUES(linkedin)`,
       [req.session.user.id, full_name, graduation_year||null, degree, company, job_title, work_location, linkedin]
     );
     res.json({ success: true });
-  } catch (e) {
-    console.error("ALUMNI PROFILE UPDATE ERR:", e);
-    res.json({ success: false, message: e.message });
-  }
+  } catch (e) { console.error(e); res.json({ success: false }); }
 });
 
-/* ─────────────────────────────────────────
-   DIRECTORY DATA
-───────────────────────────────────────── */
-router.get("/directory", auth, alumniOnly, async (req, res) => {
+/* ── DIRECTORY ── */
+router.get("/directory", auth, async (req, res) => {
   try {
     const [rows] = await db.promise().query(
-      `SELECT full_name, graduation_year, degree, company, job_title, work_location, linkedin
-       FROM alumni_profiles
-       ORDER BY graduation_year DESC`
+      "SELECT full_name, graduation_year, degree, company, job_title, work_location, linkedin FROM alumni_profiles ORDER BY graduation_year DESC"
     );
     res.json(rows);
-  } catch (e) {
-    console.error("ALUMNI DIRECTORY ERR:", e);
-    res.json([]);
-  }
+  } catch (e) { res.json([]); }
 });
 
-/* ─────────────────────────────────────────
-   DASHBOARD DATA
-───────────────────────────────────────── */
-router.get("/data", auth, alumniOnly, async (req, res) => {
+/* ── DASHBOARD DATA
+   notices has no 'type' column — removed WHERE type='global'
+── */
+router.get("/data", alumniMiddleware, async (req, res) => {
   const uid = req.session.user.id;
   try {
     const [[profile]] = await db.promise().query(
-      "SELECT username FROM users WHERE id = ?", [uid]
+      "SELECT username FROM users WHERE id=?", [uid]
     );
-    const [ap] = await db.promise().query(
-      "SELECT * FROM alumni_profiles WHERE user_id = ?", [uid]
-    );
+
     const [[ec]] = await db.promise().query(
       "SELECT COUNT(*) c FROM events WHERE event_date >= CURDATE()"
     );
+
+    /* notices has no type column — count all notices */
     const [[nc]] = await db.promise().query(
-      "SELECT COUNT(*) c FROM notices WHERE type = 'global'"
+      "SELECT COUNT(*) c FROM notices"
     );
+
     const [events] = await db.promise().query(
       "SELECT title, event_date FROM events WHERE event_date >= CURDATE() ORDER BY event_date ASC LIMIT 5"
     );
+
+    /* notices — no type filter */
     const [notices] = await db.promise().query(
-      "SELECT title FROM notices WHERE type = 'global' ORDER BY id DESC LIMIT 5"
+      "SELECT title FROM notices ORDER BY created_at DESC LIMIT 5"
     );
+
     res.json({
       name:           profile?.username,
-      profile:        ap[0] || null,
       upcomingEvents: ec.c,
       notices:        nc.c,
       events,
       noticeList:     notices
     });
-  } catch (e) {
-    console.error("ALUMNI DATA ERR:", e);
-    res.json({});
-  }
+  } catch (e) { console.error(e); res.json({}); }
 });
 
-/* ─────────────────────────────────────────
-   POST JOB OPPORTUNITY
-───────────────────────────────────────── */
-router.post("/job/post", auth, alumniOnly, async (req, res) => {
-  const { title } = req.body;
-  if (!title?.trim()) return res.json({ success: false, message: "Job title required" });
+/* ── JOB POSTING ── */
+router.post("/job/post", alumniMiddleware, async (req, res) => {
+  const { company_name, job_title, job_description, location, salary_range, requirements, application_link } = req.body;
+  const uid = req.session.user.id;
+  if (!company_name || !job_title)
+    return res.json({ success: false, message: "Company and job title required" });
   try {
     await db.promise().query(
-      "INSERT INTO notices (title, type, created_by) VALUES (?, ?, ?)",
-      [`[JOB] ${title.trim()}`, "global", req.session.user.id]
+      `INSERT INTO alumni_jobs
+         (alumni_id, company_name, job_title, job_description, location, salary_range, requirements, application_link, status)
+       VALUES (?,?,?,?,?,?,?,?,'approved')`,
+      [uid, company_name, job_title, job_description, location, salary_range, requirements, application_link]
+    );
+    res.json({ success: true });
+  } catch (e) { console.error(e); res.json({ success: false }); }
+});
+
+router.get("/jobs/my", alumniMiddleware, async (req, res) => {
+  const uid = req.session.user.id;
+  try {
+    const [jobs] = await db.promise().query(
+      `SELECT j.*, COUNT(a.id) AS application_count
+       FROM alumni_jobs j
+       LEFT JOIN job_applications a ON j.id = a.job_id
+       WHERE j.alumni_id = ?
+       GROUP BY j.id
+       ORDER BY j.created_at DESC`,
+      [uid]
+    );
+    res.json(jobs);
+  } catch (e) { console.error(e); res.json([]); }
+});
+
+router.get("/jobs/all", auth, async (req, res) => {
+  try {
+    const [jobs] = await db.promise().query(
+      `SELECT j.*, u.username AS alumni_name
+       FROM alumni_jobs j
+       JOIN users u ON j.alumni_id = u.id
+       WHERE j.status = 'approved'
+       ORDER BY j.created_at DESC`
+    );
+    res.json(jobs);
+  } catch (e) { console.error(e); res.json([]); }
+});
+
+router.post("/job/apply", auth, async (req, res) => {
+  const { job_id, cover_letter } = req.body;
+  if (!job_id) return res.json({ success: false, message: "Job ID required" });
+  try {
+    await db.promise().query(
+      "INSERT INTO job_applications (student_id, job_id, cover_letter, status) VALUES (?,?,?,'applied')",
+      [req.session.user.id, job_id, cover_letter]
     );
     res.json({ success: true });
   } catch (e) {
-    console.error("JOB POST ERR:", e);
-    res.json({ success: false, message: e.message });
+    if (e.code === "ER_DUP_ENTRY") return res.json({ success: false, message: "Already applied" });
+    console.error(e); res.json({ success: false });
   }
 });
 
-/* ─────────────────────────────────────────
-   SEND NOTIFICATION TO STUDENTS
-───────────────────────────────────────── */
-router.post("/notify", auth, alumniOnly, async (req, res) => {
+router.get("/job/applications/:job_id", alumniMiddleware, async (req, res) => {
+  try {
+    const [applications] = await db.promise().query(
+      `SELECT a.*, u.username, u.email, u.prn, u.class_name
+       FROM job_applications a
+       JOIN users u ON a.student_id = u.id
+       WHERE a.job_id = ?
+       ORDER BY a.applied_at DESC`,
+      [req.params.job_id]
+    );
+    res.json(applications);
+  } catch (e) { console.error(e); res.json([]); }
+});
+
+/* ── SEND NOTIFICATION TO STUDENTS ── */
+router.post("/notify", alumniMiddleware, async (req, res) => {
   const { message, target_role } = req.body;
-  if (!message?.trim()) return res.json({ success: false, message: "Message required" });
+  if (!message) return res.json({ success: false });
   try {
     const [users] = await db.promise().query(
-      "SELECT id FROM users WHERE role = ?",
-      [target_role || "student"]
+      "SELECT id FROM users WHERE role=?", [target_role || "student"]
     );
-    if (users.length) {
-      const inserts = users.map(u => [u.id, message.trim()]);
+    const inserts = users.map(u => [u.id, message]);
+    if (inserts.length) {
       await db.promise().query(
-        "INSERT INTO notifications (user_id, message) VALUES ?",
-        [inserts]
+        "INSERT INTO notifications (user_id, message) VALUES ?", [inserts]
       );
     }
-    res.json({ success: true, sent: users.length });
-  } catch (e) {
-    console.error("NOTIFY ERR:", e);
-    res.json({ success: false, message: e.message });
-  }
+    res.json({ success: true, sent: inserts.length });
+  } catch (e) { res.json({ success: false }); }
 });
 
 module.exports = router;

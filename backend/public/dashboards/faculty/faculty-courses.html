@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Courses | Faculty</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/dashboards/faculty/css/faculty-courses.css">
+</head>
+<body>
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-badge">F</div>
+      <div class="brand-title">Campus Connect</div>
+      <div class="brand-sub">Faculty Portal</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-label">Main</div>
+      <a class="nav-link" href="/faculty/">⬛ Dashboard</a>
+      <a class="nav-link" href="/faculty/students">👨‍🎓 Students</a>
+      <a class="nav-link" href="/faculty/academics">📚 Academics</a>
+      <div class="nav-label">Tools</div>
+      <a class="nav-link" href="/faculty/attendance">✅ Attendance</a>
+      <a class="nav-link active" href="/faculty/courses">🎓 My Courses</a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="/logout" class="logout-link">🚪 Logout</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="label">Faculty Portal</div>
+        <div class="title">My Courses</div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-primary btn-sm" onclick="openCreateModal()">➕ New Course</button>
+        <div class="avatar" id="avatarLetter">F</div>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <div id="coursesGrid" class="courses-grid">
+        <div class="empty-state" style="grid-column:1/-1;">
+          <span class="empty-icon">🎓</span>
+          <p>Loading courses...</p>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- CREATE COURSE MODAL -->
+<div class="modal-overlay" id="createModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">➕ Create New Course</div>
+      <button class="modal-close" onclick="closeCreateModal()">✕</button>
+    </div>
+    <div class="field-group">
+      <label>Course Name *</label>
+      <input id="cName" placeholder="e.g. Database Management Systems">
+    </div>
+    <div class="grid-2-sm">
+      <div class="field-group">
+        <label>Course Code</label>
+        <input id="cCode" placeholder="e.g. CS301">
+      </div>
+      <div class="field-group">
+        <label>Semester</label>
+        <select id="cSem">
+          <option value="">—</option>
+          <option value="1">Sem 1</option><option value="2">Sem 2</option>
+          <option value="3">Sem 3</option><option value="4">Sem 4</option>
+          <option value="5">Sem 5</option><option value="6">Sem 6</option>
+          <option value="7">Sem 7</option><option value="8">Sem 8</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-group">
+      <label>Description</label>
+      <textarea id="cDesc" placeholder="Brief course overview..."></textarea>
+    </div>
+    <div class="enrollment-key-preview">
+      <span>Enrollment Key will be auto-generated</span>
+      <span class="key-badge" id="keyPreview">AUTO</span>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary btn-full" onclick="createCourse()">🚀 Create Course</button>
+      <button class="btn btn-outline" onclick="closeCreateModal()">Cancel</button>
+    </div>
+    <div id="createCourseMsg" class="msg"></div>
+  </div>
+</div>
+
+<script src="/dashboards/faculty/js/faculty-courses.js"></script>
+</body>
+</html>

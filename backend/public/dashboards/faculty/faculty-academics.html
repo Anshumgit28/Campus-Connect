@@ -15,6 +15,7 @@
     <a href="/faculty/">🏠 Dashboard</a>
     <a href="/faculty/students">👨‍🎓 Students</a>
     <a href="/faculty/academics">📚 Academics</a>
+    <a href="/faculty/attendance">✅ Attendance</a>
     <a href="/logout">🚪 Logout</a>
   </aside>
 
@@ -31,23 +32,56 @@
       <div class="card">
         <h2>📝 Add New Assignment</h2>
         <div style="display:flex; flex-direction:column; gap:12px; margin-top:16px;">
-          <input id="aTitle" placeholder="Title" style="padding:12px; border-radius:10px; border:1px solid var(--border);">
-          <input id="aSubject" placeholder="Subject" style="padding:12px; border-radius:10px; border:1px solid var(--border);">
-          <textarea id="aDesc" placeholder="Description (optional)" rows="3"
-            style="padding:12px; border-radius:10px; border:1px solid var(--border); font-family:inherit; resize:vertical;"></textarea>
-          <label style="color:var(--muted); font-size:13px;">Due Date</label>
-          <input type="date" id="aDueDate" style="padding:12px; border-radius:10px; border:1px solid var(--border);">
+
+          <label style="color:var(--muted); font-size:13px;">Title *</label>
+          <input id="aTitle" placeholder="e.g. Unit 3 Assignment"
+            style="padding:12px; border-radius:10px; border:1px solid var(--border);">
+
+          <label style="color:var(--muted); font-size:13px;">Subject</label>
+          <input id="aSubject" placeholder="e.g. Data Structures"
+            style="padding:12px; border-radius:10px; border:1px solid var(--border);">
+
+          <!-- ✅ NEW: Course dropdown — only shows faculty's own courses -->
+          <label style="color:var(--muted); font-size:13px;">Linked Course (optional)</label>
+          <select id="aCourse"
+            style="padding:12px; border-radius:10px; border:1px solid var(--border); font-size:14px;">
+            <option value="">— Select a course (optional) —</option>
+          </select>
+          <p id="aCourseNote" style="font-size:12px; color:var(--muted); margin-top:-6px;">
+            📋 Loading your courses...
+          </p>
+
+          <label style="color:var(--muted); font-size:13px;">Description (optional)</label>
+          <textarea id="aDesc" placeholder="Optional details..." rows="3"
+            style="padding:12px; border-radius:10px; border:1px solid var(--border);
+              font-family:inherit; resize:vertical;"></textarea>
+
+          <label style="color:var(--muted); font-size:13px;">Due Date *</label>
+          <input type="date" id="aDueDate"
+            style="padding:12px; border-radius:10px; border:1px solid var(--border);">
+
           <button onclick="addAssignment()"
-            style="padding:12px; border-radius:10px; border:none; background:linear-gradient(135deg,var(--primary),var(--secondary)); color:white; font-weight:700; cursor:pointer;">
+            style="padding:12px; border-radius:10px; border:none;
+              background:linear-gradient(135deg,var(--primary),var(--secondary));
+              color:white; font-weight:700; cursor:pointer; font-family:inherit;">
             ➕ Add Assignment
           </button>
-          <p id="aMsg" style="font-weight:600;"></p>
+          <p id="aMsg" style="font-weight:600; min-height:20px;"></p>
         </div>
       </div>
 
       <div class="card">
-        <h2>📋 My Assignments</h2>
-        <div id="assignmentList" style="display:flex; flex-direction:column; gap:10px; margin-top:16px; max-height:400px; overflow-y:auto;"></div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <h2>📋 My Assignments</h2>
+          <span id="assignCountBadge"
+            style="background:#eef2ff; color:#4f46e5; font-size:12px;
+              font-weight:700; padding:3px 10px; border-radius:20px;">0</span>
+        </div>
+        <div id="assignmentList"
+          style="display:flex; flex-direction:column; gap:10px;
+            max-height:450px; overflow-y:auto;">
+          <p style="color:var(--muted);">Loading...</p>
+        </div>
       </div>
 
     </section>
@@ -58,27 +92,54 @@
       <div class="card">
         <h2>🧪 Schedule Exam</h2>
         <div style="display:flex; flex-direction:column; gap:12px; margin-top:16px;">
-          <input id="eSubject" placeholder="Subject" style="padding:12px; border-radius:10px; border:1px solid var(--border);">
-          <label style="color:var(--muted); font-size:13px;">Exam Date</label>
-          <input type="date" id="eDate" style="padding:12px; border-radius:10px; border:1px solid var(--border);">
-          <select id="eType" style="padding:12px; border-radius:10px; border:1px solid var(--border);">
+
+          <label style="color:var(--muted); font-size:13px;">Subject *</label>
+          <input id="eSubject" placeholder="e.g. Operating Systems"
+            style="padding:12px; border-radius:10px; border:1px solid var(--border);">
+
+          <!-- ✅ NEW: Course dropdown for exams too -->
+          <label style="color:var(--muted); font-size:13px;">Linked Course (optional)</label>
+          <select id="eCourse"
+            style="padding:12px; border-radius:10px; border:1px solid var(--border); font-size:14px;">
+            <option value="">— Select a course (optional) —</option>
+          </select>
+
+          <label style="color:var(--muted); font-size:13px;">Exam Date *</label>
+          <input type="date" id="eDate"
+            style="padding:12px; border-radius:10px; border:1px solid var(--border);">
+
+          <label style="color:var(--muted); font-size:13px;">Exam Type</label>
+          <select id="eType"
+            style="padding:12px; border-radius:10px; border:1px solid var(--border);">
             <option value="Regular">Regular</option>
             <option value="Mid-Term">Mid-Term</option>
             <option value="End-Term">End-Term</option>
             <option value="Practical">Practical</option>
             <option value="Viva">Viva</option>
           </select>
+
           <button onclick="addExam()"
-            style="padding:12px; border-radius:10px; border:none; background:linear-gradient(135deg,var(--primary),var(--secondary)); color:white; font-weight:700; cursor:pointer;">
+            style="padding:12px; border-radius:10px; border:none;
+              background:linear-gradient(135deg,var(--primary),var(--secondary));
+              color:white; font-weight:700; cursor:pointer; font-family:inherit;">
             ➕ Schedule Exam
           </button>
-          <p id="eMsg" style="font-weight:600;"></p>
+          <p id="eMsg" style="font-weight:600; min-height:20px;"></p>
         </div>
       </div>
 
       <div class="card">
-        <h2>🗓️ Scheduled Exams</h2>
-        <div id="examList" style="display:flex; flex-direction:column; gap:10px; margin-top:16px; max-height:400px; overflow-y:auto;"></div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <h2>🗓️ Scheduled Exams</h2>
+          <span id="examCountBadge"
+            style="background:#fef3c7; color:#92400e; font-size:12px;
+              font-weight:700; padding:3px 10px; border-radius:20px;">0</span>
+        </div>
+        <div id="examList"
+          style="display:flex; flex-direction:column; gap:10px;
+            max-height:400px; overflow-y:auto;">
+          <p style="color:var(--muted);">Loading...</p>
+        </div>
       </div>
 
     </section>
@@ -86,102 +147,6 @@
   </main>
 </div>
 
-<script>
-
-document.addEventListener("DOMContentLoaded", () => {
-  loadAssignments();
-  loadExams();
-});
-
-function addAssignment() {
-  const title = document.getElementById("aTitle").value;
-  const subject = document.getElementById("aSubject").value;
-  const description = document.getElementById("aDesc").value;
-  const due_date = document.getElementById("aDueDate").value;
-  const msg = document.getElementById("aMsg");
-
-  if (!title || !due_date) {
-    msg.style.color = "red"; msg.innerText = "Title and due date required"; return;
-  }
-
-  fetch("/faculty/assignment/add", {
-    method: "POST", credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ title, subject, description, due_date })
-  }).then(r => r.json()).then(d => {
-    if (d.success) {
-      msg.style.color = "green"; msg.innerText = "✅ Assignment added!";
-      document.getElementById("aTitle").value = "";
-      document.getElementById("aSubject").value = "";
-      document.getElementById("aDesc").value = "";
-      document.getElementById("aDueDate").value = "";
-      loadAssignments();
-    } else {
-      msg.style.color = "red"; msg.innerText = d.message || "Failed";
-    }
-  });
-}
-
-function loadAssignments() {
-  fetch("/faculty/assignments/list", { credentials: "include" })
-    .then(r => r.json())
-    .then(rows => {
-      const el = document.getElementById("assignmentList");
-      if (!rows.length) { el.innerHTML = "<p style='color:var(--muted);'>No assignments yet</p>"; return; }
-      el.innerHTML = rows.map(a => `
-        <div style="padding:14px; border-radius:12px; background:var(--bg); border-left:4px solid var(--primary);">
-          <strong>${a.title}</strong>
-          <p style="font-size:13px; color:var(--muted); margin-top:4px;">${a.subject || "No subject"}</p>
-          <p style="font-size:12px; color:var(--muted);">Due: ${a.due_date ? a.due_date.slice(0,10) : "—"}</p>
-          ${a.description ? `<p style="font-size:13px; margin-top:6px; color:var(--text);">${a.description}</p>` : ""}
-        </div>
-      `).join("");
-    });
-}
-
-function addExam() {
-  const subject = document.getElementById("eSubject").value;
-  const exam_date = document.getElementById("eDate").value;
-  const exam_type = document.getElementById("eType").value;
-  const msg = document.getElementById("eMsg");
-
-  if (!subject || !exam_date) {
-    msg.style.color = "red"; msg.innerText = "Subject and date required"; return;
-  }
-
-  fetch("/faculty/exam/add", {
-    method: "POST", credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ subject, exam_date, exam_type })
-  }).then(r => r.json()).then(d => {
-    if (d.success) {
-      msg.style.color = "green"; msg.innerText = "✅ Exam scheduled!";
-      document.getElementById("eSubject").value = "";
-      document.getElementById("eDate").value = "";
-      loadExams();
-    } else {
-      msg.style.color = "red"; msg.innerText = d.message || "Failed";
-    }
-  });
-}
-
-function loadExams() {
-  fetch("/faculty/exams/list", { credentials: "include" })
-    .then(r => r.json())
-    .then(rows => {
-      const el = document.getElementById("examList");
-      if (!rows.length) { el.innerHTML = "<p style='color:var(--muted);'>No exams scheduled</p>"; return; }
-      el.innerHTML = rows.map(e => `
-        <div style="padding:14px; border-radius:12px; background:var(--bg); border-left:4px solid var(--secondary);">
-          <strong>${e.subject}</strong>
-          <p style="font-size:13px; color:var(--muted); margin-top:4px;">${e.exam_type || "Regular"}</p>
-          <p style="font-size:12px; color:var(--muted);">Date: ${e.exam_date ? e.exam_date.slice(0,10) : "—"}</p>
-        </div>
-      `).join("");
-    });
-}
-
-</script>
-
+<script src="/dashboards/faculty/js/faculty-academics.js"></script>
 </body>
 </html>

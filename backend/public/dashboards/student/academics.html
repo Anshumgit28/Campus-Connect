@@ -2,83 +2,93 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Academics | Campus Connect</title>
-  <link rel="stylesheet" href="/css/style.css">
+  <title>Academics | Student Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/dashboards/student/css/dashboard.css">
+  <link rel="stylesheet" href="/dashboards/student/css/academics.css">
 </head>
-<body class="dashboard-body">
-<div class="layout">
+<body>
+<div class="app">
+
   <aside class="sidebar">
-    <div class="logo-icon">S</div>
-    <a href="/dashboard">🏠 Dashboard</a>
-    <a href="/dashboards/student/profile.html">👤 Profile</a>
-    <a href="/common/events/events.html">🎉 Events</a>
-    <a href="/common/resources/resources.html">📚 Resources</a>
-    <a href="/dashboards/student/academics.html">📊 Academics</a>
-    <a href="/dashboards/student/notifications.html">🔔 Notifications</a>
-    <a href="/logout">🚪 Logout</a>
+    <div class="brand">
+      <div class="brand-icon">CC</div>
+      <span class="brand-name">Campus Connect</span>
+    </div>
+    <nav class="nav">
+      <a href="/dashboard"                               class="nav-link">⬛ Dashboard</a>
+      <a href="/dashboards/student/profile.html"         class="nav-link">👤 Profile</a>
+      <a href="/common/events/events.html"               class="nav-link">🎉 Events</a>
+      <a href="/common/resources/resources.html"         class="nav-link">📚 Resources</a>
+      <a href="/dashboards/student/academics.html"       class="nav-link active">📊 Academics</a>
+      <a href="/dashboards/student/notifications.html"   class="nav-link">🔔 Notifications</a>
+    </nav>
+    <a href="/logout" class="logout-btn">🚪 Logout</a>
   </aside>
-  <main class="dashboard">
-    <section class="greeting">
-      <h1>📊 My Academics</h1>
-      <p>View attendance, assignments, exams and grades</p>
-    </section>
 
-    <!-- Attendance + Performance -->
-    <section class="main-grid">
-      <div class="card">
-        <h2>📊 Attendance</h2>
-        <p id="attendanceValue"
-          style="font-size:36px; font-weight:800; color:var(--primary); margin:10px 0;">—</p>
-        <div class="progress-bar">
-          <div id="attendanceBar" class="progress-fill" 
-            style="width:0%; transition:width .5s;"></div>
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <p class="topbar-label">Student</p>
+        <h1 class="topbar-name">Academic Overview</h1>
+      </div>
+    </header>
+
+    <div class="acad-wrap">
+
+      <!-- TAB BAR -->
+      <div class="tab-bar">
+        <button class="tab active" onclick="showTab('attendance', this)">📊 Attendance</button>
+        <button class="tab"        onclick="showTab('performance', this)">🏆 Performance</button>
+        <button class="tab"        onclick="showTab('assignments', this)">📝 Assignments</button>
+        <button class="tab"        onclick="showTab('exams',       this)">🧪 Exams</button>
+        <button class="tab"        onclick="showTab('grades',      this)">🎓 Grades</button>
+      </div>
+
+      <!-- ATTENDANCE TAB -->
+      <div id="tab-attendance" class="tab-panel active card">
+        <div class="card-title">📊 Attendance</div>
+        <div class="attend-big" id="attendanceValue">—</div>
+        <div class="attend-track">
+          <div class="attend-fill" id="attendanceBar" style="width:0%"></div>
         </div>
-        <p id="attendanceNote" style="font-size:13px; margin-top:8px; color:var(--muted);"></p>
+        <div class="attend-note" id="attendanceNote"></div>
       </div>
-      <div class="card">
-        <h2>🏆 Performance Summary</h2>
-        <p id="performanceLabel" style="margin-top:12px; font-size:18px;">Loading...</p>
-      </div>
-    </section>
 
-    <!-- Assignments + Exams -->
-    <section class="main-grid">
-      <div class="card">
-        <h2>📝 Upcoming Assignments</h2>
-        <ul id="assignmentList"
-          style="list-style:none; padding:0; margin-top:10px;">
-          <li style="color:var(--muted);">Loading...</li>
+      <!-- PERFORMANCE TAB -->
+      <div id="tab-performance" class="tab-panel card" style="display:none;">
+        <div class="card-title">🏆 Overall Performance</div>
+        <div id="performanceLabel" class="perf-label">Loading...</div>
+      </div>
+
+      <!-- ASSIGNMENTS TAB -->
+      <div id="tab-assignments" class="tab-panel card" style="display:none;">
+        <div class="card-title">📝 Upcoming Assignments</div>
+        <ul id="assignmentList" class="item-list">
+          <li class="item-muted">Loading...</li>
         </ul>
       </div>
-      <div class="card">
-        <h2>🧪 Upcoming Exams</h2>
-        <ul id="examList"
-          style="list-style:none; padding:0; margin-top:10px;">
-          <li style="color:var(--muted);">Loading...</li>
+
+      <!-- EXAMS TAB -->
+      <div id="tab-exams" class="tab-panel card" style="display:none;">
+        <div class="card-title">🧪 Upcoming Exams</div>
+        <ul id="examList" class="item-list">
+          <li class="item-muted">Loading...</li>
         </ul>
       </div>
-    </section>
 
-    <!-- Grades -->
-    <section class="card" style="width:100%; flex:none;">
-      <h2>🎓 Grades</h2>
-      <div id="gradeContainer" style="margin-top:16px;">
-        <p style="color:var(--muted);">Loading...</p>
+      <!-- GRADES TAB -->
+      <div id="tab-grades" class="tab-panel card" style="display:none;">
+        <div class="card-title">🎓 My Grades</div>
+        <div id="gradesList">Loading...</div>
       </div>
-    </section>
+
+    </div>
   </main>
 </div>
 
 <script src="/common/academics/academics.js"></script>
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  // ✅ FIXED: Pass all 3 parameters including noteId
-  Academics.loadAttendance("attendanceBar", "attendanceValue", "attendanceNote");
-  Academics.loadAssignments("assignmentList");
-  Academics.loadExams("examList");
-  Academics.loadGrades("gradeContainer");
-  Academics.loadPerformance("performanceLabel");
-});
-</script>
+<script src="/dashboards/student/js/academics-page.js"></script>
 </body>
 </html>
