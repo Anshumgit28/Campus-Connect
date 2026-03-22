@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Treasury | Club</title>
+  <link rel="stylesheet" href="/dashboards/club/css/club-features.css">
+</head>
+<body>
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">C</div>
+      <span class="brand-name">Campus Connect</span>
+    </div>
+    <nav class="nav">
+      <a href="/club/"               class="nav-link">⬛ Dashboard</a>
+      <a href="/club/members"        class="nav-link">👥 Members</a>
+      <a href="/club/events"         class="nav-link">🎉 Events</a>
+      <a href="/club/announcements"  class="nav-link">📢 Announcements</a>
+      <a href="/club/attendance"     class="nav-link">✅ Attendance</a>
+      <a href="/club/treasury"       class="nav-link active">💰 Treasury</a>
+      <a href="/club/tasks"          class="nav-link">📋 Tasks</a>
+      <a href="/club/polls"          class="nav-link">🗳️ Polls</a>
+      <a href="/club/gallery"        class="nav-link">🖼️ Gallery</a>
+    </nav>
+    <a href="/logout" class="logout-btn">🚪 Logout</a>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <p class="topbar-label">Club Management</p>
+        <h1 class="topbar-name">Club Treasury</h1>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-success btn-sm" onclick="openTxModal('income')">+ Add Income</button>
+        <button class="btn btn-danger btn-sm"  onclick="openTxModal('expense')">- Add Expense</button>
+        <div class="avatar" id="avatarLetter">C</div>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- BALANCE HERO -->
+      <div class="card" id="balanceCard" style="
+        background: linear-gradient(135deg, var(--primary), var(--violet));
+        color: white; border: none;
+      ">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:20px;">
+          <div>
+            <div style="font-size:13px;font-weight:600;opacity:.7;text-transform:uppercase;letter-spacing:.5px;">Current Balance</div>
+            <div style="font-family:'Syne',sans-serif;font-size:48px;font-weight:800;line-height:1;margin-top:8px;" id="balanceDisplay">₹0</div>
+            <div style="font-size:13px;opacity:.6;margin-top:6px;" id="balanceNote">No transactions yet</div>
+          </div>
+          <div style="display:flex;gap:24px;">
+            <div style="text-align:center;">
+              <div style="font-size:11px;opacity:.6;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Total Income</div>
+              <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;" id="totalIncome">₹0</div>
+            </div>
+            <div style="text-align:center;">
+              <div style="font-size:11px;opacity:.6;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Total Expense</div>
+              <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;" id="totalExpense">₹0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+
+        <!-- ADD TRANSACTION FORM (quick) -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">➕ Quick Add Transaction</div>
+          </div>
+          <div class="field-group">
+            <label>Type *</label>
+            <select id="txType">
+              <option value="income">💰 Income</option>
+              <option value="expense">💸 Expense</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label>Description *</label>
+            <input id="txDesc" placeholder="e.g. Registration fees, Decoration cost">
+          </div>
+          <div class="grid-2-sm">
+            <div class="field-group">
+              <label>Amount (₹) *</label>
+              <input type="number" id="txAmount" placeholder="e.g. 5000" min="1" step="0.01">
+            </div>
+            <div class="field-group">
+              <label>Date *</label>
+              <input type="date" id="txDate">
+            </div>
+          </div>
+          <div class="field-group">
+            <label>Category</label>
+            <select id="txCategory">
+              <option value="Event">🎉 Event</option>
+              <option value="Equipment">🔧 Equipment</option>
+              <option value="Sponsorship">🤝 Sponsorship</option>
+              <option value="Registration">📝 Registration</option>
+              <option value="Food">🍕 Food & Refreshments</option>
+              <option value="Marketing">📣 Marketing</option>
+              <option value="Miscellaneous">📦 Miscellaneous</option>
+            </select>
+          </div>
+          <button class="btn btn-primary btn-full" onclick="addTransaction()">💾 Add Transaction</button>
+          <div id="txMsg" class="msg"></div>
+        </div>
+
+        <!-- RECENT TRANSACTIONS -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🕐 Recent Transactions</div>
+            <button class="btn btn-outline btn-sm" onclick="loadTransactions()">🔄 Refresh</button>
+          </div>
+          <div id="recentTxList" style="display:flex;flex-direction:column;gap:10px;max-height:420px;overflow-y:auto;">
+            <p style="color:var(--muted);text-align:center;padding:20px;">Loading...</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- FULL LEDGER -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📒 Full Ledger</div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <select id="filterType" onchange="filterTransactions()" style="font-size:13px;padding:6px 10px;border-radius:8px;">
+              <option value="">All Types</option>
+              <option value="income">Income</option>
+              <option value="expense">Expense</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr><th>Date</th><th>Type</th><th>Category</th><th>Description</th><th>Amount</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="ledgerBody">
+              <tr><td colspan="6" class="table-empty">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="/dashboards/club/js/club-treasury.js"></script>
+</body>
+</html>

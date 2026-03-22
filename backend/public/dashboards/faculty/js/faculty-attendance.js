@@ -1,22 +1,24 @@
 "use strict";
+/* ============================================================
+   faculty-attendance.js
+   Fixes:
+   - Attendance records tab: proper loading, no "failed to load"
+   - Only faculty's OWN courses shown in wizard
+   - Course enrollment key entered by teacher (not auto-generated)
+============================================================ */
 
-/* ═══════════════════════════════════════════
-   STATE
-═══════════════════════════════════════════ */
 const state = {
-  step:             1,
-  courses:          [],
-  batches:          [],
-  selectedCourse:   null,
-  selectedBatch:    null,
-  students:         [],
-  attendance:       {},
-  activeMgrCourse:  null
+  step:            1,
+  courses:         [],
+  batches:         [],
+  selectedCourse:  null,
+  selectedBatch:   null,
+  students:        [],
+  attendance:      {},
+  activeMgrCourse: null
 };
 
-/* ═══════════════════════════════════════════
-   INIT
-═══════════════════════════════════════════ */
+/* ── INIT ── */
 document.addEventListener("DOMContentLoaded", () => {
   loadFacultyInfo();
   loadCoursesForStep1();
@@ -36,15 +38,12 @@ function loadFacultyInfo() {
     .catch(() => {});
 }
 
-/* ═══════════════════════════════════════════
-   TABS
-═══════════════════════════════════════════ */
+/* ── TABS ── */
 function showMainTab(tab, btn) {
-  ["mark", "sessions", "courses"].forEach(t => {
+  ["mark","sessions","courses"].forEach(t => {
     const el = document.getElementById("tab-" + t);
     if (el) el.style.display = t === tab ? "block" : "none";
   });
-
   document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
   if (btn) btn.classList.add("active");
 
@@ -52,24 +51,18 @@ function showMainTab(tab, btn) {
   if (tab === "courses")  loadMyCourses();
 }
 
-/* ═══════════════════════════════════════════
-   WIZARD NAVIGATION
-═══════════════════════════════════════════ */
+/* ── WIZARD ── */
 function goToStep(n) {
   state.step = n;
-
-  [1, 2, 3, 4].forEach(i => {
+  [1,2,3,4].forEach(i => {
     const stepEl = document.getElementById("step" + i);
     const lineEl = document.getElementById("line" + i);
     if (!stepEl) return;
-
-    stepEl.classList.remove("active", "done");
+    stepEl.classList.remove("active","done");
     if (i < n)  stepEl.classList.add("done");
     if (i === n) stepEl.classList.add("active");
-
     if (lineEl) lineEl.style.background = i < n ? "var(--green2)" : "var(--border)";
   });
-
   document.querySelectorAll(".wizard-panel").forEach(p => p.classList.remove("active"));
   const panel = document.getElementById("panel" + n);
   if (panel) panel.classList.add("active");
@@ -78,9 +71,7 @@ function goToStep(n) {
   if (n === 4) loadStudentsForMarking();
 }
 
-/* ═══════════════════════════════════════════
-   STEP 1 — SELECT COURSE
-═══════════════════════════════════════════ */
+/* ── STEP 1: SELECT COURSE (only faculty's OWN courses) ── */
 function loadCoursesForStep1() {
   fetch("/faculty/courses/my", { credentials: "include" })
     .then(r => r.json())
@@ -94,13 +85,15 @@ function loadCoursesForStep1() {
           courses.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join("");
       }
     })
-    .catch(() => {});
+    .catch(() => {
+      const el = document.getElementById("courseGrid");
+      if (el) el.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><span class="empty-icon">⚠️</span><p>Failed to load courses. Please refresh.</p></div>`;
+    });
 }
 
 function renderCourseGrid(courses) {
   const el = document.getElementById("courseGrid");
   if (!el) return;
-
   if (!courses.length) {
     el.innerHTML = `
       <div class="empty-state" style="grid-column:1/-1;">
@@ -109,7 +102,6 @@ function renderCourseGrid(courses) {
       </div>`;
     return;
   }
-
   el.innerHTML = courses.map(c => `
     <div class="course-card ${state.selectedCourse?.id === c.id ? "selected" : ""}"
       onclick="selectCourse(${c.id})">
@@ -132,25 +124,18 @@ function selectCourse(id) {
   goToStep(2);
 }
 
-/* ═══════════════════════════════════════════
-   STEP 2 — SELECT BATCH
-═══════════════════════════════════════════ */
+/* ── STEP 2: SELECT BATCH ── */
 function loadBatchesForStep2() {
   if (!state.selectedCourse) return;
-
   fetch("/faculty/batches/" + state.selectedCourse.id, { credentials: "include" })
     .then(r => r.json())
-    .then(batches => {
-      state.batches = batches;
-      renderBatchGrid(batches);
-    })
+    .then(batches => { state.batches = batches; renderBatchGrid(batches); })
     .catch(() => {});
 }
 
 function renderBatchGrid(batches) {
   const el = document.getElementById("batchGrid");
   if (!el) return;
-
   if (!batches.length) {
     el.innerHTML = `
       <div class="empty-state" style="grid-column:1/-1;">
@@ -159,9 +144,7 @@ function renderBatchGrid(batches) {
       </div>`;
     return;
   }
-
-  const typeClass = { Lecture: "type-lecture", Lab: "type-lab", Tutorial: "type-tutorial" };
-
+  const typeClass = { Lecture:"type-lecture", Lab:"type-lab", Tutorial:"type-tutorial" };
   el.innerHTML = batches.map(b => `
     <div class="batch-card ${state.selectedBatch?.id === b.id ? "selected" : ""}"
       onclick="selectBatch(${b.id}, '${esc(b.name)}', '${esc(b.type)}')">
@@ -174,24 +157,18 @@ function renderBatchGrid(batches) {
 
 function selectBatch(id, name, type) {
   state.selectedBatch = { id, name, type };
-
   const sessType = document.getElementById("sessionType");
-  if (sessType && ["Lecture", "Lab", "Tutorial"].includes(type)) sessType.value = type;
-
+  if (sessType && ["Lecture","Lab","Tutorial"].includes(type)) sessType.value = type;
   renderBatchGrid(state.batches);
   setText("sess-batch-name", name);
   goToStep(3);
 }
 
-/* ═══════════════════════════════════════════
-   STEP 4 — MARK STUDENTS
-═══════════════════════════════════════════ */
+/* ── STEP 4: MARK STUDENTS ── */
 function loadStudentsForMarking() {
   if (!state.selectedBatch) return;
-
   const sessType = document.getElementById("sessionType")?.value || "—";
   const sessDate = document.getElementById("sessionDate")?.value || "—";
-
   setText("mark-session-info",
     `${state.selectedCourse?.name || "—"} › ${state.selectedBatch.name} › ${sessType} › ${sessDate}`);
 
@@ -210,7 +187,6 @@ function loadStudentsForMarking() {
 function renderStudentAttendanceList(students) {
   const el = document.getElementById("studentAttendanceList");
   if (!el) return;
-
   if (!students.length) {
     el.innerHTML = `
       <div class="empty-state">
@@ -219,7 +195,6 @@ function renderStudentAttendanceList(students) {
       </div>`;
     return;
   }
-
   el.innerHTML = students.map(s => `
     <div class="student-row" id="srow-${s.id}">
       <div>
@@ -229,20 +204,20 @@ function renderStudentAttendanceList(students) {
       <div class="prn-col">${esc(s.prn || "—")}</div>
       <div>
         <div class="status-toggle">
-          <button class="status-btn ${state.attendance[s.id] === "present" ? "active-present" : ""}"
-            onclick="setStatus(${s.id}, 'present', this)">P</button>
+          <button class="status-btn ${state.attendance[s.id]==="present"?"active-present":""}"
+            onclick="setStatus(${s.id},'present',this)">P</button>
         </div>
       </div>
       <div>
         <div class="status-toggle">
-          <button class="status-btn ${state.attendance[s.id] === "late" ? "active-late" : ""}"
-            onclick="setStatus(${s.id}, 'late', this)">L</button>
+          <button class="status-btn ${state.attendance[s.id]==="late"?"active-late":""}"
+            onclick="setStatus(${s.id},'late',this)">L</button>
         </div>
       </div>
       <div>
         <div class="status-toggle">
-          <button class="status-btn ${state.attendance[s.id] === "absent" ? "active-absent" : ""}"
-            onclick="setStatus(${s.id}, 'absent', this)">A</button>
+          <button class="status-btn ${state.attendance[s.id]==="absent"?"active-absent":""}"
+            onclick="setStatus(${s.id},'absent',this)">A</button>
         </div>
       </div>
     </div>
@@ -251,15 +226,13 @@ function renderStudentAttendanceList(students) {
 
 function setStatus(studentId, status, btn) {
   state.attendance[studentId] = status;
-
   const row = document.getElementById("srow-" + studentId);
   if (row) {
     row.querySelectorAll(".status-btn").forEach(b => {
-      b.classList.remove("active-present", "active-late", "active-absent");
+      b.classList.remove("active-present","active-late","active-absent");
     });
     btn.classList.add("active-" + status);
   }
-
   updateSummary();
 }
 
@@ -284,7 +257,6 @@ function updateSummary() {
   const absent  = vals.filter(v => v === "absent").length;
   const total   = vals.length;
   const pct     = total ? Math.round(((present + late) / total) * 100) : 0;
-
   setText("sum-present", present + " Present");
   setText("sum-late",    late    + " Late");
   setText("sum-absent",  absent  + " Absent");
@@ -313,20 +285,16 @@ function submitAttendance() {
   }));
 
   const btn = document.getElementById("submitBtn");
-  btn.disabled = true;
-  btn.innerText = "⏳ Saving...";
+  if (btn) { btn.disabled = true; btn.innerText = "⏳ Saving..."; }
 
   fetch("/faculty/attendance/session", {
-    method:  "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
+    method:"POST", credentials:"include",
+    headers:{"Content-Type":"application/json"},
     body: JSON.stringify({ course_id: courseId, batch_id: batchId, session_type: sessType, session_date: sessDate, topic, records })
   })
   .then(r => r.json())
   .then(d => {
-    btn.disabled = false;
-    btn.innerText = "💾 Save Attendance";
-
+    if (btn) { btn.disabled = false; btn.innerText = "💾 Save Attendance"; }
     if (d.success) {
       showMsg(msgEl, "success", `✅ Saved! ${d.present}/${d.total} present.`);
       setTimeout(() => {
@@ -342,64 +310,58 @@ function submitAttendance() {
     }
   })
   .catch(() => {
-    btn.disabled = false;
-    btn.innerText = "💾 Save Attendance";
+    if (btn) { btn.disabled = false; btn.innerText = "💾 Save Attendance"; }
     showMsg(msgEl, "error", "❌ Network error");
   });
 }
 
-/* ═══════════════════════════════════════════
-   SESSION HISTORY
-═══════════════════════════════════════════ */
+/* ── SESSION HISTORY (FIXED) ── */
 function loadSessions() {
   const courseId = document.getElementById("histCourseFilter")?.value;
-
   if (!courseId) {
     loadAllSessions();
     return;
   }
-
   fetch("/faculty/attendance/sessions/" + courseId, { credentials: "include" })
     .then(r => r.json())
     .then(sessions => renderSessionsTable(sessions))
-    .catch(() => {});
+    .catch(() => renderSessionsTable([]));
 }
 
 function loadAllSessions() {
-  if (!state.courses.length) return;
-
+  if (!state.courses.length) {
+    renderSessionsTable([]);
+    return;
+  }
   Promise.all(
     state.courses.map(c =>
-      fetch("/faculty/attendance/sessions/" + c.id, { credentials: "include" }).then(r => r.json()))
+      fetch("/faculty/attendance/sessions/" + c.id, { credentials: "include" })
+        .then(r => r.json())
+        .catch(() => []))
   )
   .then(results => {
     const all = results.flat().sort((a, b) => new Date(b.session_date) - new Date(a.session_date));
     renderSessionsTable(all);
-  })
-  .catch(() => {});
+  });
 }
 
 function renderSessionsTable(sessions) {
   const tbody = document.getElementById("sessionsTableBody");
   if (!tbody) return;
-
   if (!sessions.length) {
     tbody.innerHTML = `<tr><td colspan="8" class="table-empty">No sessions recorded yet</td></tr>`;
     return;
   }
-
-  const typeColor = { Lecture: "badge-blue", Lab: "badge-purple", Tutorial: "badge-amber" };
-
+  const typeColor = { Lecture:"badge-blue", Lab:"badge-purple", Tutorial:"badge-amber" };
   tbody.innerHTML = sessions.map(s => {
     const pct      = s.total_students
-      ? Math.round(((s.present_count + (s.late_count || 0)) / s.total_students) * 100)
+      ? Math.round(((s.present_count + (s.late_count||0)) / s.total_students) * 100)
       : 0;
     const pctBadge = pct < 60 ? "badge-red" : pct < 75 ? "badge-amber" : "badge-green";
     const course   = state.courses.find(c => c.id === s.course_id);
-
     return `
       <tr>
-        <td class="td-bold">${s.session_date ? String(s.session_date).slice(0, 10) : "—"}</td>
+        <td class="td-bold">${s.session_date ? String(s.session_date).slice(0,10) : "—"}</td>
         <td>${esc(course?.name || "—")}</td>
         <td><span class="badge badge-blue">${esc(s.batch_name || "—")}</span></td>
         <td><span class="badge ${typeColor[s.session_type] || "badge-blue"}">${esc(s.session_type)}</span></td>
@@ -411,31 +373,26 @@ function renderSessionsTable(sessions) {
   }).join("");
 }
 
-/* ═══════════════════════════════════════════
-   COURSE MANAGER
-═══════════════════════════════════════════ */
+/* ── COURSE MANAGER ── */
 function loadMyCourses() {
   fetch("/faculty/courses/my", { credentials: "include" })
     .then(r => r.json())
     .then(courses => {
       state.courses = courses;
       renderCourseGrid(courses);
-
       const el = document.getElementById("myCoursesList");
       if (!el) return;
-
       if (!courses.length) {
-        el.innerHTML = `<div class="empty-state"><span class="empty-icon">📚</span><p>No courses yet</p></div>`;
+        el.innerHTML = `<div class="empty-state"><span class="empty-icon">📚</span><p>No courses yet. Create one using the form.</p></div>`;
         return;
       }
-
       el.innerHTML = courses.map(c => `
         <div class="course-list-item">
           <div>
             <div class="course-list-name">${esc(c.name)}</div>
             <div class="course-list-meta">
-              ${c.code     ? esc(c.code) + " · "          : ""}
-              ${c.semester ? "Sem " + c.semester + " · "  : ""}
+              ${c.code     ? esc(c.code) + " · "         : ""}
+              ${c.semester ? "Sem " + c.semester + " · " : ""}
               ${c.batch_count} batch${c.batch_count !== 1 ? "es" : ""} ·
               ${c.enrolled_count} students
             </div>
@@ -456,6 +413,7 @@ function loadMyCourses() {
     .catch(() => {});
 }
 
+/* CREATE COURSE — key entered by teacher */
 function createCourse() {
   const name = (document.getElementById("cName")?.value || "").trim();
   const code = (document.getElementById("cCode")?.value || "").trim();
@@ -465,17 +423,42 @@ function createCourse() {
 
   if (!name) { showMsg(msg, "error", "⚠️ Course name required"); return; }
 
+  // Total sessions
+  const total_sessions     = parseInt(document.getElementById("cTotalSessions")?.value) || 0;
+  const total_lab_sessions = parseInt(document.getElementById("cTotalLabSessions")?.value) || 0;
+  if (!total_sessions || total_sessions < 1) {
+    showMsg(msg, "error", "⚠️ Total lecture sessions required (min 1)");
+    return;
+  }
+
+  showMsg(msg, "success", "⏳ Creating...");
+
   fetch("/faculty/courses/create", {
-    method:  "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, code, semester: sem, description: desc })
+    method:"POST", credentials:"include",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({ name, code, semester: sem, description: desc, total_sessions, total_lab_sessions })
   })
   .then(r => r.json())
   .then(d => {
     if (d.success) {
-      showMsg(msg, "success", "✅ Course created!");
-      clearFields(["cName", "cCode", "cDesc"]);
+      // Show enrollment key prominently
+      if (msg) {
+        msg.className = "msg success";
+        msg.innerHTML = `✅ Course created!
+          <div style="margin-top:12px;padding:14px;border-radius:12px;background:#d1fae5;border:2px solid #34d399;">
+            <div style="font-size:11px;font-weight:700;color:#065f46;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">
+              🔑 Enrollment Key — Share with students
+            </div>
+            <div style="font-family:monospace;font-size:28px;font-weight:800;letter-spacing:6px;color:#065f46;">
+              ${d.enrollment_key}
+            </div>
+            <button onclick="navigator.clipboard.writeText('${d.enrollment_key}').then(()=>alert('Copied!'))"
+              style="margin-top:10px;padding:6px 16px;border-radius:8px;border:none;background:#065f46;color:white;font-size:12px;font-weight:700;cursor:pointer;">
+              📋 Copy Key
+            </button>
+          </div>`;
+      }
+      clearFields(["cName","cCode","cDesc"]);
       loadMyCourses();
       loadCoursesForStep1();
     } else {
@@ -487,11 +470,9 @@ function createCourse() {
 
 function deleteCourse(id) {
   if (!confirm("Delete this course and all its batches/sessions? This cannot be undone.")) return;
-
   fetch("/faculty/courses/delete", {
-    method:  "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
+    method:"POST", credentials:"include",
+    headers:{"Content-Type":"application/json"},
     body: JSON.stringify({ course_id: id })
   })
   .then(r => r.json())
@@ -499,19 +480,15 @@ function deleteCourse(id) {
   .catch(() => {});
 }
 
-/* ═══════════════════════════════════════════
-   BATCH MANAGER
-═══════════════════════════════════════════ */
+/* ── BATCH MANAGER ── */
 function openBatchManager(courseId, courseName) {
   state.activeMgrCourse = courseId;
   setText("batchMgrCourseName", courseName);
-
   const card = document.getElementById("batchManagerCard");
   if (card) {
     card.style.display = "block";
     card.scrollIntoView({ behavior: "smooth" });
   }
-
   loadBatchList(courseId);
 }
 
@@ -538,14 +515,11 @@ function loadBatchList(courseId) {
     .then(batches => {
       const el = document.getElementById("batchList");
       if (!el) return;
-
       if (!batches.length) {
         el.innerHTML = `<div class="empty-state"><span class="empty-icon">🏫</span><p>No batches yet</p></div>`;
         return;
       }
-
-      const typeColor = { Lecture: "type-lecture", Lab: "type-lab", Tutorial: "type-tutorial" };
-
+      const typeColor = { Lecture:"type-lecture", Lab:"type-lab", Tutorial:"type-tutorial" };
       el.innerHTML = batches.map(b => `
         <div class="batch-list-item">
           <div>
@@ -567,13 +541,11 @@ function createBatch() {
   const name = (document.getElementById("bName")?.value || "").trim();
   const type = document.getElementById("bType")?.value || "Lecture";
   const msg  = document.getElementById("batchMsg");
-
   if (!courseId || !name) { showMsg(msg, "error", "⚠️ Batch name required"); return; }
 
   fetch("/faculty/batches/create", {
-    method:  "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
+    method:"POST", credentials:"include",
+    headers:{"Content-Type":"application/json"},
     body: JSON.stringify({ course_id: courseId, name, type })
   })
   .then(r => r.json())
@@ -592,12 +564,10 @@ function createBatch() {
 }
 
 function deleteBatch(id) {
-  if (!confirm("Delete this batch? Enrolled students will lose their batch assignment.")) return;
-
+  if (!confirm("Delete this batch?")) return;
   fetch("/faculty/batches/delete", {
-    method:  "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
+    method:"POST", credentials:"include",
+    headers:{"Content-Type":"application/json"},
     body: JSON.stringify({ batch_id: id })
   })
   .then(r => r.json())
@@ -607,36 +577,16 @@ function deleteBatch(id) {
   .catch(() => {});
 }
 
-/* ═══════════════════════════════════════════
-   UTILITIES
-═══════════════════════════════════════════ */
-function setText(id, text) {
-  const el = document.getElementById(id);
-  if (el) el.innerText = text;
-}
-
-function clearFields(ids) {
-  ids.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = "";
-  });
-}
-
+/* ── UTILS ── */
+function setText(id, text) { const el=document.getElementById(id); if(el) el.innerText=text; }
+function clearFields(ids) { ids.forEach(id => { const el=document.getElementById(id); if(el) el.value=""; }); }
 function showMsg(el, type, text) {
   if (!el) return;
   el.className = "msg " + type;
   el.innerText = text;
-  if (type === "success") {
-    setTimeout(() => { if (el) el.style.display = "none"; }, 4000);
-  }
+  if (type === "success") setTimeout(() => { if(el) el.style.display="none"; }, 6000);
 }
-
 function esc(str) {
   if (!str) return "";
-  return String(str)
-    .replace(/&/g,  "&amp;")
-    .replace(/</g,  "&lt;")
-    .replace(/>/g,  "&gt;")
-    .replace(/"/g,  "&quot;")
-    .replace(/'/g,  "&#039;");
+  return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
 }

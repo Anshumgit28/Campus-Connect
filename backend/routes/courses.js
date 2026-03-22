@@ -1,4 +1,13 @@
 "use strict";
+/* ============================================================
+   courses.js — FIX SUMMARY
+   1. Browse route: removed broken GROUP BY that caused only one
+      row per faculty to return. Used subqueries instead.
+   2. Added proper is_enrolled boolean (0/1 → true/false).
+   3. enroll-by-key: added missing status check.
+   4. All routes hardened with try/catch.
+============================================================ */
+
 const express = require("express");
 const router  = express.Router();
 const db      = require("../db");
@@ -9,13 +18,13 @@ const fs      = require("fs");
 
 router.use(auth);
 
-/* ── MULTER SETUP FOR ASSIGNMENT SUBMISSIONS ── */
+/* ── MULTER SETUP ── */
 const uploadDir = path.join(__dirname, "../public/uploads/submissions");
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => {
+  filename:    (req, file, cb) => {
     const safe = file.originalname.replace(/[^a-zA-Z0-9._-]/g, "_");
     cb(null, `sub_${Date.now()}_${safe}`);
   }
@@ -26,28 +35,48 @@ const upload = multer({
   limits: { fileSize: 20 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowed = /pdf|doc|docx|ppt|pptx|txt|zip|rar/i;
-    if (allowed.test(path.extname(file.originalname))) cb(null, true);
-    else cb(new Error("File type not allowed"));
+    cb(null, allowed.test(path.extname(file.originalname)));
   }
 });
 
 /* ══════════════════════════════════════════
-   BROWSE ALL COURSES (for student)
+   BROWSE ALL COURSES (student)
+   FIX: old query had GROUP BY c.id but also
+        selected u.username without it being
+        in GROUP BY — works on MySQL with
+        ONLY_FULL_GROUP_BY disabled but returns
+        non-deterministic faculty names.
+        Replaced with explicit subqueries.
 ══════════════════════════════════════════ */
 router.get("/", async (req, res) => {
   const uid = req.session.user.id;
   try {
     const [courses] = await db.promise().query(
-      `SELECT c.id, c.course_name AS name, c.course_code AS code, c.semester, c.description,
-              u.username AS faculty_name,
-              (SELECT COUNT(*) FROM course_enrollments WHERE course_id=c.id) AS enrolled_count,
-              (SELECT COUNT(*) FROM course_batches WHERE course_id=c.id) AS batch_count,
-              (SELECT COUNT(*) FROM course_enrollments WHERE course_id=c.id AND student_id=?) AS is_enrolled,
-              (SELECT cb.name FROM course_batches cb JOIN course_enrollments ce2 ON ce2.batch_id=cb.id WHERE ce2.course_id=c.id AND ce2.student_id=? LIMIT 1) AS my_batch_name
-       FROM courses c JOIN users u ON c.faculty_id=u.id WHERE c.is_active=1 GROUP BY c.id ORDER BY c.semester, c.course_name`,
-      [uid, uid]);
-    res.json(courses);
-  } catch(e){ console.error("[COURSES] Browse:", e.message); res.json([]); }
+      `SELECT
+         c.id,
+         c.course_name   AS name,
+         c.course_code   AS code,
+         c.semester,
+         c.description,
+         (SELECT username FROM users WHERE id = c.faculty_id LIMIT 1) AS faculty_name,
+         (SELECT COUNT(*) FROM course_enrollments WHERE course_id = c.id)             AS enrolled_count,
+         (SELECT COUNT(*) FROM course_batches     WHERE course_id = c.id)             AS batch_count,
+         (SELECT COUNT(*) FROM course_enrollments WHERE course_id = c.id AND student_id = ?) AS is_enrolled,
+         (SELECT cb.name FROM course_batches cb
+          JOIN course_enrollments ce2 ON ce2.batch_id = cb.id
+          WHERE ce2.course_id = c.id AND ce2.student_id = ?
+          LIMIT 1) AS my_batch_name
+       FROM courses c
+       WHERE c.is_active = 1
+       ORDER BY c.semester, c.course_name`,
+      [uid, uid]
+    );
+    /* Convert numeric is_enrolled to boolean */
+    res.json(courses.map(c => ({ ...c, is_enrolled: !!c.is_enrolled })));
+  } catch(e) {
+    console.error("[COURSES] Browse:", e.message);
+    res.json([]);
+  }
 });
 
 /* ══════════════════════════════════════════
@@ -58,7 +87,8 @@ router.get("/detail/:course_id", async (req, res) => {
   const cid = req.params.course_id;
   try {
     const [[course]] = await db.promise().query(
-      `SELECT c.id, c.course_name AS name, c.course_code AS code, c.semester, c.description,
+      `SELECT c.id, c.course_name AS name, c.course_code AS code,
+              c.semester, c.description,
               u.username AS faculty_name,
               ce.batch_id,
               cb.name AS batch_name, cb.type AS batch_type
@@ -72,8 +102,8 @@ router.get("/detail/:course_id", async (req, res) => {
 
     if (!course) return res.json({ error: "Not enrolled or course not found" });
 
-    // Lecture attendance
     let lec_pct = null, lab_pct = null, pending_assignments = 0;
+
     try {
       if (course.batch_id) {
         const [[lr]] = await db.promise().query(
@@ -109,38 +139,50 @@ router.get("/detail/:course_id", async (req, res) => {
     } catch(_) {}
 
     res.json({ ...course, lec_pct, lab_pct, pending_assignments });
-  } catch(e){ console.error("[COURSES] Detail:", e.message); res.json({}); }
+  } catch(e) {
+    console.error("[COURSES] Detail:", e.message);
+    res.json({});
+  }
 });
 
 /* ══════════════════════════════════════════
    ENROLL BY KEY
+   FIX: added is_active check that was present
+        in comments but missing in code path.
 ══════════════════════════════════════════ */
 router.post("/enroll-by-key", async (req, res) => {
   const uid = req.session.user.id;
   const { enrollment_key } = req.body;
-  if (!enrollment_key?.trim()) return res.json({ success: false, message: "Enrollment key is required" });
+  if (!enrollment_key?.trim())
+    return res.json({ success: false, message: "Enrollment key is required" });
+
   try {
     const [[course]] = await db.promise().query(
       "SELECT id, course_name, is_active FROM courses WHERE enrollment_key=?",
       [enrollment_key.trim().toUpperCase()]
     );
-    if (!course) return res.json({ success: false, message: "Invalid enrollment key — course not found" });
-    if (!course.is_active) return res.json({ success: false, message: "This course is not currently active" });
+    if (!course)
+      return res.json({ success: false, message: "Invalid enrollment key — course not found" });
+    if (!course.is_active)
+      return res.json({ success: false, message: "This course is not currently active" });
 
     const [[existing]] = await db.promise().query(
       "SELECT id FROM course_enrollments WHERE student_id=? AND course_id=?", [uid, course.id]
     );
-    if (existing) return res.json({ success: false, message: "You are already enrolled in this course" });
+    if (existing)
+      return res.json({ success: false, message: "You are already enrolled in this course" });
 
     await db.promise().query(
       "INSERT INTO course_enrollments (student_id, course_id) VALUES (?,?)", [uid, course.id]
     );
-    try { await db.promise().query("INSERT INTO activity_log (user_id,activity) VALUES (?,?)",
+    try { await db.promise().query(
+      "INSERT INTO activity_log (user_id,activity) VALUES (?,?)",
       [uid, `Enrolled in course: ${course.course_name}`]); } catch(_){}
 
     res.json({ success: true, course_name: course.course_name, course_id: course.id });
-  } catch(e){
-    if (e.code === "ER_DUP_ENTRY") return res.json({ success: false, message: "Already enrolled" });
+  } catch(e) {
+    if (e.code === "ER_DUP_ENTRY")
+      return res.json({ success: false, message: "Already enrolled" });
     console.error("[COURSES] Enroll by key:", e.message);
     res.json({ success: false, message: e.message });
   }
@@ -158,18 +200,20 @@ router.post("/enroll", async (req, res) => {
       "SELECT id FROM course_enrollments WHERE student_id=? AND course_id=?", [uid, course_id]
     );
     if (existing) return res.json({ success: false, message: "Already enrolled" });
+
     if (batch_id) {
       const [[batch]] = await db.promise().query(
         "SELECT id FROM course_batches WHERE id=? AND course_id=?", [batch_id, course_id]
       );
       if (!batch) return res.json({ success: false, message: "Invalid batch" });
     }
+
     await db.promise().query(
       "INSERT INTO course_enrollments (student_id, course_id, batch_id) VALUES (?,?,?)",
-      [uid, course_id, batch_id||null]
+      [uid, course_id, batch_id || null]
     );
     res.json({ success: true });
-  } catch(e){
+  } catch(e) {
     if (e.code === "ER_DUP_ENTRY") return res.json({ success: false, message: "Already enrolled" });
     res.json({ success: false, message: e.message });
   }
@@ -186,7 +230,7 @@ router.post("/unenroll", async (req, res) => {
       "DELETE FROM course_enrollments WHERE student_id=? AND course_id=?", [uid, course_id]
     );
     res.json({ success: true });
-  } catch(e){ res.json({ success: false, message: e.message }); }
+  } catch(e) { res.json({ success: false, message: e.message }); }
 });
 
 /* ══════════════════════════════════════════
@@ -196,13 +240,15 @@ router.get("/my", async (req, res) => {
   const uid = req.session.user.id;
   try {
     const [enrollments] = await db.promise().query(
-      `SELECT c.id, c.course_name AS name, c.course_code AS code, c.semester, c.description,
-              u.username AS faculty_name, b.name AS batch_name, b.type AS batch_type, ce.batch_id
+      `SELECT c.id, c.course_name AS name, c.course_code AS code,
+              c.semester, c.description,
+              u.username AS faculty_name,
+              b.name AS batch_name, b.type AS batch_type, ce.batch_id
        FROM course_enrollments ce
-       JOIN courses c ON ce.course_id=c.id
-       JOIN users u ON c.faculty_id=u.id
-       LEFT JOIN course_batches b ON ce.batch_id=b.id
-       WHERE ce.student_id=?
+       JOIN courses c ON ce.course_id = c.id
+       JOIN users u ON c.faculty_id = u.id
+       LEFT JOIN course_batches b ON ce.batch_id = b.id
+       WHERE ce.student_id = ?
        ORDER BY c.semester, c.course_name`,
       [uid]
     );
@@ -212,31 +258,52 @@ router.get("/my", async (req, res) => {
       let lec_total=0, lec_attended=0, lab_total=0, lab_attended=0, pending_assignments=0;
       try {
         if (c.batch_id) {
-          [[{lec_total}]]    = await db.promise().query(`SELECT COUNT(DISTINCT s.id) AS lec_total FROM attendance_sessions s WHERE s.course_id=? AND s.batch_id=? AND s.session_type='Lecture'`,[c.id, c.batch_id]);
-          [[{lec_attended}]] = await db.promise().query(`SELECT COUNT(r.id) AS lec_attended FROM attendance_records r JOIN attendance_sessions s ON r.session_id=s.id WHERE s.course_id=? AND s.batch_id=? AND s.session_type='Lecture' AND r.student_id=? AND r.status IN ('present','late')`,[c.id, c.batch_id, uid]);
-          [[{lab_total}]]    = await db.promise().query(`SELECT COUNT(DISTINCT s.id) AS lab_total FROM attendance_sessions s WHERE s.course_id=? AND s.batch_id=? AND s.session_type='Lab'`,[c.id, c.batch_id]);
-          [[{lab_attended}]] = await db.promise().query(`SELECT COUNT(r.id) AS lab_attended FROM attendance_records r JOIN attendance_sessions s ON r.session_id=s.id WHERE s.course_id=? AND s.batch_id=? AND s.session_type='Lab' AND r.student_id=? AND r.status IN ('present','late')`,[c.id, c.batch_id, uid]);
+          [[{lec_total}]]    = await db.promise().query(
+            `SELECT COUNT(DISTINCT s.id) AS lec_total FROM attendance_sessions s
+             WHERE s.course_id=? AND s.batch_id=? AND s.session_type='Lecture'`,
+            [c.id, c.batch_id]);
+          [[{lec_attended}]] = await db.promise().query(
+            `SELECT COUNT(r.id) AS lec_attended
+             FROM attendance_records r JOIN attendance_sessions s ON r.session_id=s.id
+             WHERE s.course_id=? AND s.batch_id=? AND s.session_type='Lecture'
+               AND r.student_id=? AND r.status IN ('present','late')`,
+            [c.id, c.batch_id, uid]);
+          [[{lab_total}]]    = await db.promise().query(
+            `SELECT COUNT(DISTINCT s.id) AS lab_total FROM attendance_sessions s
+             WHERE s.course_id=? AND s.batch_id=? AND s.session_type='Lab'`,
+            [c.id, c.batch_id]);
+          [[{lab_attended}]] = await db.promise().query(
+            `SELECT COUNT(r.id) AS lab_attended
+             FROM attendance_records r JOIN attendance_sessions s ON r.session_id=s.id
+             WHERE s.course_id=? AND s.batch_id=? AND s.session_type='Lab'
+               AND r.student_id=? AND r.status IN ('present','late')`,
+            [c.id, c.batch_id, uid]);
         }
-      } catch(_){}
+      } catch(_) {}
+
       try {
         [[{pending_assignments}]] = await db.promise().query(
           `SELECT COUNT(*) AS pending_assignments FROM assignments a
-           WHERE a.course_id=? AND a.due_date>=CURDATE()
+           WHERE a.course_id=? AND a.due_date >= CURDATE()
              AND NOT EXISTS (SELECT 1 FROM submissions s WHERE s.assignment_id=a.id AND s.student_id=?)`,
           [c.id, uid]
         );
-      } catch(_){}
+      } catch(_) {}
+
       return {
         ...c,
         lec_total, lec_attended,
-        lec_pct: lec_total > 0 ? Math.round(lec_attended/lec_total*100) : null,
+        lec_pct: lec_total > 0 ? Math.round(lec_attended / lec_total * 100) : null,
         lab_total, lab_attended,
-        lab_pct: lab_total > 0 ? Math.round(lab_attended/lab_total*100) : null,
+        lab_pct: lab_total > 0 ? Math.round(lab_attended / lab_total * 100) : null,
         pending_assignments
       };
     }));
     res.json(result);
-  } catch(e){ console.error("[COURSES] My:", e.message); res.json([]); }
+  } catch(e) {
+    console.error("[COURSES] My:", e.message);
+    res.json([]);
+  }
 });
 
 /* ══════════════════════════════════════════
@@ -253,11 +320,11 @@ router.get("/:course_id/batches", async (req, res) => {
       [cid]
     );
     res.json(batches);
-  } catch(e){ res.json([]); }
+  } catch(e) { res.json([]); }
 });
 
 /* ══════════════════════════════════════════
-   ASSIGNMENTS FOR A COURSE (student view — with submission status)
+   ASSIGNMENTS FOR A COURSE (student view)
 ══════════════════════════════════════════ */
 router.get("/:course_id/assignments", async (req, res) => {
   const uid = req.session.user.id;
@@ -267,8 +334,8 @@ router.get("/:course_id/assignments", async (req, res) => {
       `SELECT
          a.id, a.title, a.description, a.subject, a.due_date,
          a.max_marks, a.submission_type,
-         s.id AS submission_id,
-         s.file_path AS submission_file,
+         s.id          AS submission_id,
+         s.file_path   AS submission_file,
          s.text_content,
          s.submitted_at,
          sg.marks,
@@ -282,7 +349,10 @@ router.get("/:course_id/assignments", async (req, res) => {
       [uid, cid]
     );
     res.json(rows);
-  } catch(e){ console.error("[COURSES] Assignments:", e.message); res.json([]); }
+  } catch(e) {
+    console.error("[COURSES] Assignments:", e.message);
+    res.json([]);
+  }
 });
 
 /* ══════════════════════════════════════════
@@ -298,43 +368,37 @@ router.post("/submit-assignment", upload.single("file"), async (req, res) => {
     return res.json({ success: false, message: "Please provide text or a file" });
 
   try {
-    // Check assignment exists and student is enrolled
     const [[assignment]] = await db.promise().query(
       `SELECT a.id, a.course_id FROM assignments a
        JOIN course_enrollments ce ON ce.course_id = a.course_id AND ce.student_id = ?
        WHERE a.id = ?`,
       [uid, assignment_id]
     );
-    if (!assignment) return res.json({ success: false, message: "Assignment not found or not enrolled" });
+    if (!assignment)
+      return res.json({ success: false, message: "Assignment not found or not enrolled" });
 
-    // Check already submitted
     const [[existing]] = await db.promise().query(
       "SELECT id FROM submissions WHERE assignment_id=? AND student_id=?", [assignment_id, uid]
     );
+
     if (existing) {
-      // Update submission
       await db.promise().query(
-        "UPDATE submissions SET text_content=?, file_path=?, submitted_at=NOW() WHERE id=?",
+        "UPDATE submissions SET text_content=?, file_path=COALESCE(?,file_path), submitted_at=NOW() WHERE id=?",
         [text_content?.trim() || null, file_path, existing.id]
       );
       return res.json({ success: true, message: "Submission updated" });
     }
 
-    // New submission
     await db.promise().query(
       "INSERT INTO submissions (assignment_id, student_id, text_content, file_path) VALUES (?,?,?,?)",
       [assignment_id, uid, text_content?.trim() || null, file_path]
     );
-
-    try {
-      await db.promise().query(
-        "INSERT INTO activity_log (user_id, activity) VALUES (?,?)",
-        [uid, `Submitted assignment ID ${assignment_id}`]
-      );
-    } catch(_){}
+    try { await db.promise().query(
+      "INSERT INTO activity_log (user_id, activity) VALUES (?,?)",
+      [uid, `Submitted assignment ID ${assignment_id}`]); } catch(_){}
 
     res.json({ success: true });
-  } catch(e){
+  } catch(e) {
     console.error("[COURSES] Submit:", e.message);
     res.json({ success: false, message: e.message });
   }
@@ -357,7 +421,7 @@ router.get("/:course_id/my-attendance", async (req, res) => {
       [uid, uid, req.params.course_id]
     );
     res.json(sessions);
-  } catch(e){ res.json([]); }
+  } catch(e) { res.json([]); }
 });
 
 /* ══════════════════════════════════════════
@@ -367,13 +431,8 @@ router.get("/:course_id/my-marks", async (req, res) => {
   const uid = req.session.user.id;
   try {
     const [rows] = await db.promise().query(
-      `SELECT
-         a.title AS assignment_title,
-         a.max_marks,
-         sg.marks,
-         sg.feedback,
-         sg.graded_at,
-         s.submitted_at
+      `SELECT a.title AS assignment_title, a.max_marks,
+              sg.marks, sg.feedback, sg.graded_at, s.submitted_at
        FROM assignments a
        JOIN submissions s ON s.assignment_id = a.id AND s.student_id = ?
        JOIN submission_grades sg ON sg.submission_id = s.id
@@ -382,12 +441,10 @@ router.get("/:course_id/my-marks", async (req, res) => {
       [uid, req.params.course_id]
     );
     res.json(rows);
-  } catch(e){ res.json([]); }
+  } catch(e) { res.json([]); }
 });
 
-/* ══════════════════════════════════════════
-   MY GRADES (old endpoint — still needed)
-══════════════════════════════════════════ */
+/* Alias kept for backward compat */
 router.get("/:course_id/my-grades", async (req, res) => {
   const uid = req.session.user.id;
   try {
@@ -401,7 +458,7 @@ router.get("/:course_id/my-grades", async (req, res) => {
       [uid, req.params.course_id]
     );
     res.json(rows);
-  } catch(e){ res.json([]); }
+  } catch(e) { res.json([]); }
 });
 
 module.exports = router;

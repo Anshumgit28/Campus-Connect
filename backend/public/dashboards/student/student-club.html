@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Club | Campus Connect</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/dashboards/student/css/dashboard.css">
+  <style>
+    .club-hero {
+      background: linear-gradient(135deg, #2d6a4f 0%, #1b4332 100%);
+      color: #fff; border-radius: 14px;
+      padding: 24px 28px;
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .club-hero h2 { font-size: 20px; font-weight: 600; }
+    .club-hero p  { font-size: 13px; opacity: .75; margin-top: 3px; }
+    .club-badge {
+      background: rgba(255,255,255,.2); border: 1px solid rgba(255,255,255,.3);
+      border-radius: 20px; padding: 6px 16px; font-size: 13px; font-weight: 500;
+    }
+    .no-club-box {
+      background: #fff; border: 1px solid var(--border,#eee);
+      border-radius: 14px; padding: 48px 32px; text-align: center;
+    }
+    .no-club-box .big-icon { font-size: 48px; margin-bottom: 16px; }
+    .no-club-box h2 { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+    .no-club-box p  { color: var(--muted,#888); font-size: 14px; margin-bottom: 24px; }
+    .pending-banner {
+      background: #fef9c3; border: 1px solid #e9c46a; border-radius: 10px;
+      padding: 14px 18px; display: flex; align-items: center; gap: 10px;
+      margin-bottom: 20px; font-size: 13px; color: #713f12;
+    }
+    .club-tabs { display: flex; gap: 4px; margin-bottom: 20px; flex-wrap: wrap; }
+    .club-tab {
+      padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 500;
+      cursor: pointer; border: 1px solid transparent;
+      color: var(--muted,#888); background: transparent; font-family: inherit; transition: all .15s;
+    }
+    .club-tab.active {
+      background: #fff; border-color: var(--border,#eee);
+      color: var(--text,#111); box-shadow: 0 1px 6px rgba(0,0,0,.07);
+    }
+    .club-card {
+      background: #fff; border: 1px solid var(--border,#eee);
+      border-radius: 14px; padding: 20px 24px; margin-bottom: 16px;
+    }
+    .club-card-title {
+      font-size: 12px; font-weight: 600; letter-spacing: .06em;
+      text-transform: uppercase; color: var(--muted,#888); margin-bottom: 14px;
+    }
+    .ann-item { padding: 12px 0; border-bottom: 1px solid var(--border,#eee); }
+    .ann-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .ann-text { font-size: 14px; line-height: 1.5; }
+    .ann-meta { font-size: 11px; color: var(--muted,#888); margin-top: 3px; }
+    .task-row {
+      display: flex; gap: 12px; align-items: flex-start;
+      padding: 12px 0; border-bottom: 1px solid var(--border,#eee);
+    }
+    .task-row:last-child { border-bottom: none; }
+    .task-dot {
+      width: 16px; height: 16px; border-radius: 50%;
+      border: 2px solid var(--border,#ccc); flex-shrink: 0; margin-top: 3px;
+    }
+    .task-dot.done        { background: #2d6a4f; border-color: #2d6a4f; }
+    .task-dot.in_progress { background: #e9c46a; border-color: #e9c46a; }
+    .task-name  { font-size: 14px; font-weight: 500; }
+    .task-desc  { font-size: 12px; color: var(--muted,#888); margin-top: 2px; }
+    .task-pills { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+    .pill {
+      display: inline-block; padding: 2px 10px;
+      border-radius: 20px; font-size: 11px; font-weight: 600;
+    }
+    .pill-green  { background: #d8f3dc; color: #1b4332; }
+    .pill-orange { background: #fde8d8; color: #7c2d12; }
+    .pill-blue   { background: #dbeafe; color: #1e3a8a; }
+    .pill-red    { background: #fee2e2; color: #7f1d1d; }
+    .pill-gray   { background: #f3f4f6; color: #374151; }
+    .pill-yellow { background: #fef9c3; color: #713f12; }
+    .att-summary { display: flex; align-items: center; gap: 20px; margin-bottom: 20px; }
+    .att-pct { font-size: 38px; font-weight: 700; }
+    .att-bar-wrap { flex: 1; background: #f0f0f0; border-radius: 4px; height: 8px; overflow: hidden; }
+    .att-bar  { height: 100%; border-radius: 4px; transition: width .5s; }
+    .att-sessions .big { font-size: 20px; font-weight: 600; }
+    .att-sessions .sm  { font-size: 11px; color: var(--muted,#888); text-align:center; }
+    .att-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .att-table th {
+      text-align: left; font-size: 11px; font-weight: 600; letter-spacing: .05em;
+      text-transform: uppercase; color: var(--muted,#888);
+      padding: 0 8px 10px; border-bottom: 1px solid var(--border,#eee);
+    }
+    .att-table td { padding: 10px 8px; border-bottom: 1px solid var(--border,#eee); }
+    .att-table tr:last-child td { border-bottom: none; }
+    .member-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #f5f5f5; border: 1px solid var(--border,#eee);
+      border-radius: 20px; padding: 5px 12px; font-size: 12px; font-weight: 500; margin: 4px;
+    }
+    .member-av {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: #2d6a4f; color: #fff;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700;
+    }
+    .clubs-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 0; border-bottom: 1px solid var(--border,#eee);
+    }
+    .clubs-row:last-child { border-bottom: none; }
+    .clubs-row h4 { font-size: 14px; font-weight: 500; }
+    .clubs-row p  { font-size: 12px; color: var(--muted,#888); margin-top: 2px; }
+    .empty-box { text-align: center; padding: 28px; color: var(--muted,#888); font-size: 13px; }
+    .empty-box .ei { font-size: 28px; margin-bottom: 8px; }
+
+    /* ── POLL STYLES ── */
+    .poll-card {
+      background: #fff; border: 1px solid var(--border,#eee);
+      border-radius: 14px; padding: 20px 24px; margin-bottom: 14px;
+    }
+    .poll-question {
+      font-size: 16px; font-weight: 700; margin-bottom: 6px; color: var(--text,#111);
+    }
+    .poll-meta {
+      font-size: 12px; color: var(--muted,#888); margin-bottom: 16px;
+    }
+    .poll-option {
+      padding: 11px 15px; border-radius: 10px;
+      border: 1.5px solid var(--border,#eee);
+      margin-bottom: 9px; cursor: pointer; transition: all .15s;
+      display: flex; align-items: center; justify-content: space-between;
+      background: #fafafa; user-select: none;
+    }
+    .poll-option:hover:not(.voted)    { border-color: #6366f1; background: #f5f5ff; }
+    .poll-option.selected { border-color: #6366f1; background: #eef2ff; }
+    .poll-option.voted    { cursor: default; }
+    .poll-option.winner   { border-color: #2d6a4f; background: #d8f3dc; }
+    .poll-bar-wrap {
+      height: 5px; background: #ebebeb; border-radius: 5px;
+      overflow: hidden; flex: 1; margin: 0 12px;
+    }
+    .poll-bar {
+      height: 100%; border-radius: 5px;
+      background: linear-gradient(90deg, #6366f1, #8b5cf6);
+      transition: width .6s ease;
+    }
+    .poll-pct {
+      font-size: 12px; font-weight: 700; color: #6366f1;
+      min-width: 36px; text-align: right;
+    }
+    .poll-vote-count {
+      font-size: 11px; color: var(--muted,#888);
+    }
+    .poll-closed-badge {
+      display: inline-block; padding: 2px 10px; border-radius: 20px;
+      background: #f3f4f6; color: #6b7280;
+      font-size: 11px; font-weight: 600; margin-left: 8px;
+    }
+    .poll-your-vote {
+      font-size: 12px; color: #2d6a4f; font-weight: 600;
+      margin-top: 10px; padding: 8px 12px;
+      background: #d8f3dc; border-radius: 8px;
+    }
+
+    /* modal */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.4); z-index: 100;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: white; border-radius: 18px; padding: 28px;
+      max-width: 520px; width: 90%; max-height: 82vh;
+      overflow-y: auto; box-shadow: 0 25px 60px rgba(0,0,0,.2);
+    }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+    .modal-title { font-size: 18px; font-weight: 700; }
+    .modal-close { background: none; border: none; cursor: pointer; font-size: 18px; color: var(--muted,#888); }
+
+    .btn { padding: 9px 18px; border-radius: 10px; border: none; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
+    .btn-primary { background: #6366f1; color: white; }
+    .btn-primary:hover { background: #4f46e5; }
+    .btn-sm { padding: 6px 14px; font-size: 12px; border-radius: 8px; }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">CC</div>
+      <span class="brand-name">Campus Connect</span>
+    </div>
+    <nav class="nav">
+      <a href="/dashboard"                               class="nav-link"><span class="nav-icon">⬛</span> Dashboard</a>
+      <a href="/dashboards/student/profile.html"         class="nav-link"><span class="nav-icon">👤</span> Profile</a>
+      <a href="/common/events/events.html"               class="nav-link"><span class="nav-icon">🎉</span> Events</a>
+      <a href="/common/resources/resources.html"         class="nav-link"><span class="nav-icon">📚</span> Resources</a>
+      <a href="/dashboards/student/academics.html"       class="nav-link"><span class="nav-icon">📊</span> Academics</a>
+      <a href="/dashboards/student/student-courses.html" class="nav-link"><span class="nav-icon">🎓</span> My Courses</a>
+      <a href="/club/student/my-club-page"               class="nav-link active"><span class="nav-icon">🏆</span> My Club</a>
+      <a href="/dashboards/student/notifications.html"   class="nav-link"><span class="nav-icon">🔔</span> Notifications</a>
+    </nav>
+    <a href="/logout" class="logout-btn">🚪 Logout</a>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <div class="topbar-label">Student</div>
+        <div class="topbar-name" id="pageTitle">My Club</div>
+      </div>
+      <div class="avatar" id="avatarLetter">S</div>
+    </header>
+
+    <div style="padding: 24px 36px;">
+      <div id="page-content">
+        <div class="empty-box"><div class="ei">⏳</div><p>Loading…</p></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- BROWSE CLUBS MODAL -->
+<div class="modal-overlay" id="browseModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Browse &amp; Join Clubs</div>
+      <button class="modal-close" onclick="closeBrowse()">✕</button>
+    </div>
+    <div id="clubs-list"><div class="empty-box"><p>Loading…</p></div></div>
+  </div>
+</div>
+
+<script>
+// ── INIT ──
+fetch('/dashboard/data', { credentials: 'include' }).then(r => r.json()).then(d => {
+  const av = document.getElementById('avatarLetter');
+  if (av) av.textContent = (d.user || 'S')[0].toUpperCase();
+}).catch(() => {});
+
+// Load club data
+fetch('/club/student/my-club').then(r => r.json()).then(data => {
+  renderPage(data);
+}).catch(() => {
+  document.getElementById('page-content').innerHTML =
+    '<div class="empty-box"><div class="ei">⚠️</div><p>Failed to load. Please refresh.</p></div>';
+});
+
+// ── RENDER PAGE ──
+function renderPage(data) {
+  const el = document.getElementById('page-content');
+
+  if (data.pending) {
+    el.innerHTML = `
+      <div class="pending-banner">
+        <span style="font-size:20px">⏳</span>
+        <p>Your join request for <strong>${data.club_name}</strong> is pending approval.</p>
+      </div>
+      <div class="no-club-box">
+        <div class="big-icon">🔍</div>
+        <h2>Browse other clubs while you wait</h2>
+        <p>You can also request to join another club.</p>
+        <button class="btn btn-primary btn-sm" onclick="openBrowse()">Browse Clubs</button>
+      </div>`;
+    return;
+  }
+
+  if (!data.joined) {
+    el.innerHTML = `
+      <div class="no-club-box">
+        <div class="big-icon">🏆</div>
+        <h2>You're not in a club yet</h2>
+        <p>Join a club to collaborate, attend events, and connect with peers.</p>
+        <button class="btn btn-primary btn-sm" onclick="openBrowse()">Browse &amp; Join Clubs</button>
+      </div>`;
+    return;
+  }
+
+  // Update page title
+  document.getElementById('pageTitle').textContent = data.club_name || 'My Club';
+
+  el.innerHTML = `
+    <div class="club-hero">
+      <div>
+        <h2>${data.club_name}</h2>
+        <p>${data.members?.length || 0} members</p>
+      </div>
+      <div class="club-badge">${data.position || 'Member'}</div>
+    </div>
+    <div class="club-tabs">
+      <button class="club-tab active" onclick="showTab('ann',this)">📢 Announcements</button>
+      <button class="club-tab" onclick="showTab('tasks',this)">✅ My Tasks</button>
+      <button class="club-tab" onclick="showTab('polls',this)">🗳️ Polls</button>
+      <button class="club-tab" onclick="showTab('att',this)">📋 Attendance</button>
+      <button class="club-tab" onclick="showTab('members',this)">👥 Members</button>
+    </div>
+    <div id="tab-ann">${renderAnn(data.announcements)}</div>
+    <div id="tab-tasks"   style="display:none">${renderTasks(data.tasks)}</div>
+    <div id="tab-polls"   style="display:none"><div class="empty-box"><div class="ei">⏳</div><p>Loading polls…</p></div></div>
+    <div id="tab-att"     style="display:none">${renderAtt(data.attendance)}</div>
+    <div id="tab-members" style="display:none">${renderMembers(data.members)}</div>
+  `;
+
+  // Pre-load polls in background
+  loadPolls();
+}
+
+// ── TAB SWITCHER ──
+function showTab(name, btn) {
+  ['ann','tasks','polls','att','members'].forEach(t =>
+    document.getElementById('tab-'+t).style.display = t === name ? '' : 'none'
+  );
+  document.querySelectorAll('.club-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  if (name === 'polls') loadPolls();
+}
+
+// ── ANNOUNCEMENTS ──
+function renderAnn(list) {
+  if (!list?.length) return `<div class="empty-box"><div class="ei">📢</div><p>No announcements yet.</p></div>`;
+  return `<div class="club-card"><div class="club-card-title">Announcements</div>`+
+    list.map(a =>`<div class="ann-item"><div class="ann-text">${esc(a.title)}</div><div class="ann-meta">${esc(a.posted_by||'Club')} · ${fmt(a.created_at)}</div></div>`).join('')+`</div>`;
+}
+
+// ── TASKS ──
+function renderTasks(list) {
+  if (!list?.length) return `<div class="empty-box"><div class="ei">✅</div><p>No tasks assigned to you.</p></div>`;
+  return `<div class="club-card"><div class="club-card-title">My Tasks</div>`+
+    list.map(t =>`
+      <div class="task-row">
+        <div class="task-dot ${t.status}"></div>
+        <div>
+          <div class="task-name">${esc(t.title)}</div>
+          ${t.description?`<div class="task-desc">${esc(t.description)}</div>`:''}
+          <div class="task-pills">
+            <span class="pill ${priP(t.priority)}">${t.priority}</span>
+            <span class="pill ${stP(t.status)}">${t.status.replace('_',' ')}</span>
+            ${t.due_date?`<span class="pill pill-gray">Due ${fmt(t.due_date)}</span>`:''}
+          </div>
+        </div>
+      </div>`).join('')+`</div>`;
+}
+
+// ── POLLS ──
+let pollsLoaded = false;
+
+async function loadPolls() {
+  const container = document.getElementById('tab-polls');
+  if (!container) return;
+
+  // Show spinner only if not loaded yet
+  if (!pollsLoaded) {
+    container.innerHTML = `<div class="empty-box"><div class="ei">⏳</div><p>Loading polls…</p></div>`;
+  }
+
+  try {
+    const res   = await fetch('/club/polls/list', { credentials: 'include' });
+    const polls = await res.json();
+    pollsLoaded = true;
+
+    if (!polls.length) {
+      container.innerHTML = `<div class="empty-box"><div class="ei">🗳️</div><p>No polls posted yet.</p></div>`;
+      return;
+    }
+
+    const active = polls.filter(p => p.is_active);
+    const closed = polls.filter(p => !p.is_active);
+
+    let html = '';
+
+    if (active.length) {
+      html += `<div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted,#888);margin-bottom:12px;">🟢 Active Polls</div>`;
+      html += active.map(p => renderPollCard(p, true)).join('');
+    }
+
+    if (closed.length) {
+      html += `<div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted,#888);margin:20px 0 12px;">🔒 Closed Polls</div>`;
+      html += closed.map(p => renderPollCard(p, false)).join('');
+    }
+
+    container.innerHTML = html;
+
+  } catch (e) {
+    container.innerHTML = `<div class="empty-box"><div class="ei">⚠️</div><p>Failed to load polls.</p></div>`;
+  }
+}
+
+function renderPollCard(p, isActive) {
+  const totalVotes  = p.options.reduce((s, o) => s + (o.vote_count || 0), 0);
+  const userVote    = p.user_voted_option; // option id student voted for
+  const hasVoted    = !!userVote;
+
+  const optionsHtml = p.options.map(o => {
+    const pct        = totalVotes > 0 ? Math.round((o.vote_count / totalVotes) * 100) : 0;
+    const isSelected = userVote === o.id;
+    const isWinner   = !isActive && p.options.every(x => o.vote_count >= x.vote_count);
+    const canVote    = isActive && !hasVoted;
+
+    return `
+      <div class="poll-option ${isSelected ? 'selected' : ''} ${!canVote ? 'voted' : ''} ${isWinner && !isActive ? 'winner' : ''}"
+        onclick="${canVote ? `castVote(${p.id}, ${o.id}, this)` : ''}"
+        style="cursor:${canVote ? 'pointer' : 'default'}">
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;font-size:14px;">
+            ${isSelected ? '✅ ' : ''}${esc(o.label)}
+          </div>
+          ${hasVoted || !isActive ? `
+            <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+              <div class="poll-bar-wrap"><div class="poll-bar" style="width:${pct}%"></div></div>
+              <span class="poll-pct">${pct}%</span>
+            </div>` : ''}
+        </div>
+        <span class="poll-vote-count">${o.vote_count} vote${o.vote_count !== 1 ? 's' : ''}</span>
+      </div>`;
+  }).join('');
+
+  return `
+    <div class="poll-card" id="poll-${p.id}">
+      <div class="poll-question">
+        ${esc(p.question)}
+        ${!isActive ? `<span class="poll-closed-badge">🔒 Closed</span>` : ''}
+      </div>
+      <div class="poll-meta">
+        ${totalVotes} vote${totalVotes !== 1 ? 's' : ''}
+        ${p.ends_at ? ` · Closes ${fmt(p.ends_at)}` : ''}
+        ${hasVoted ? ` · <span style="color:#2d6a4f;font-weight:600;">You voted</span>` : ''}
+      </div>
+      ${optionsHtml}
+      ${!isActive && hasVoted ? `<div class="poll-your-vote">✅ You voted in this poll</div>` : ''}
+      ${isActive && !hasVoted ? `<p style="font-size:12px;color:#6366f1;margin-top:8px;font-weight:600;">Tap an option above to cast your vote</p>` : ''}
+    </div>`;
+}
+
+async function castVote(pollId, optionId, optionEl) {
+  // Optimistic UI — disable all options in this poll
+  const card = document.getElementById('poll-' + pollId);
+  if (card) card.querySelectorAll('.poll-option').forEach(o => {
+    o.style.pointerEvents = 'none';
+    o.style.opacity = '.7';
+  });
+
+  try {
+    const res  = await fetch('/club/polls/vote', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ poll_id: pollId, option_id: optionId })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      // Reload polls to show updated counts and "you voted" state
+      pollsLoaded = false;
+      await loadPolls();
+    } else {
+      alert(data.message || 'Vote failed. Please try again.');
+      // Re-enable on failure
+      if (card) card.querySelectorAll('.poll-option').forEach(o => {
+        o.style.pointerEvents = '';
+        o.style.opacity = '';
+      });
+    }
+  } catch (e) {
+    alert('Network error. Please try again.');
+    if (card) card.querySelectorAll('.poll-option').forEach(o => {
+      o.style.pointerEvents = '';
+      o.style.opacity = '';
+    });
+  }
+}
+
+// ── ATTENDANCE ──
+function renderAtt(list) {
+  if (!list?.length) return `<div class="empty-box"><div class="ei">📋</div><p>No meetings recorded yet.</p></div>`;
+  const total   = list.length;
+  const present = list.filter(a => a.status === 'present' || a.status === 'late').length;
+  const pct     = total ? Math.round(present / total * 100) : 0;
+  const clr     = pct >= 75 ? '#2d6a4f' : pct >= 50 ? '#e9c46a' : '#e63946';
+  return `
+    <div class="club-card">
+      <div class="club-card-title">Attendance Summary</div>
+      <div class="att-summary">
+        <div class="att-pct" style="color:${clr}">${pct}%</div>
+        <div class="att-bar-wrap"><div class="att-bar" style="width:${pct}%;background:${clr}"></div></div>
+        <div class="att-sessions"><div class="big">${present}/${total}</div><div class="sm">Sessions</div></div>
+      </div>
+    </div>
+    <div class="club-card">
+      <div class="club-card-title">Meeting History</div>
+      <table class="att-table">
+        <thead><tr><th>Meeting</th><th>Date</th><th>Status</th></tr></thead>
+        <tbody>${list.map(a => `<tr>
+          <td>${esc(a.title)}</td>
+          <td style="font-size:12px;color:var(--muted)">${fmt(a.meeting_date)}</td>
+          <td><span class="pill ${attP(a.status)}">${a.status}</span></td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+}
+
+// ── MEMBERS ──
+function renderMembers(list) {
+  if (!list?.length) return `<div class="empty-box"><div class="ei">👥</div><p>No members.</p></div>`;
+  return `<div class="club-card"><div class="club-card-title">Members (${list.length})</div><div style="margin-top:4px">`+
+    list.map(m =>`<div class="member-chip">
+      <div class="member-av">${m.username[0].toUpperCase()}</div>
+      ${esc(m.username)} <span style="color:var(--muted);font-weight:400">· ${esc(m.position_name)}</span>
+    </div>`).join('')+`</div></div>`;
+}
+
+// ── BROWSE CLUBS ──
+async function openBrowse() {
+  document.getElementById('browseModal').classList.add('open');
+  const clubs = await fetch('/club/student/all-clubs').then(r => r.json());
+  const el    = document.getElementById('clubs-list');
+  if (!clubs.length) { el.innerHTML = '<div class="empty-box">No clubs available.</div>'; return; }
+  el.innerHTML = clubs.map(c => {
+    const action = c.my_status === 'approved'
+      ? `<span class="pill pill-green">✅ Joined</span>`
+      : c.my_status === 'pending'
+      ? `<span class="pill pill-yellow">⏳ Pending</span>`
+      : `<button class="btn btn-primary btn-sm" onclick="joinClub(${c.id},this)">Request to Join</button>`;
+    return `<div class="clubs-row">
+      <div><h4>${esc(c.name)}</h4><p>${c.member_count} members</p></div>
+      ${action}
+    </div>`;
+  }).join('');
+}
+
+function closeBrowse() {
+  document.getElementById('browseModal').classList.remove('open');
+}
+
+document.getElementById('browseModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeBrowse();
+});
+
+async function joinClub(clubId, btn) {
+  btn.disabled = true; btn.textContent = 'Sending…';
+  const data = await fetch('/club/student/join-request', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ club_id: clubId })
+  }).then(r => r.json());
+  if (data.success) btn.outerHTML = `<span class="pill pill-yellow">⏳ Pending</span>`;
+  else { btn.disabled = false; btn.textContent = data.message || 'Error'; }
+}
+
+// ── HELPERS ──
+function fmt(d)  { return d ? new Date(d).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) : '—'; }
+function priP(p) { return p === 'high' ? 'pill-red' : p === 'medium' ? 'pill-yellow' : 'pill-blue'; }
+function stP(s)  { return s === 'done' ? 'pill-green' : s === 'in_progress' ? 'pill-blue' : 'pill-gray'; }
+function attP(s) { return s === 'present' ? 'pill-green' : s === 'late' ? 'pill-yellow' : 'pill-red'; }
+function esc(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>

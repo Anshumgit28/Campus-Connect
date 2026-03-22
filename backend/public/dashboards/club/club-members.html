@@ -2,43 +2,151 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Club Members | Campus Connect</title>
-  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/dashboards/club/css/club-features.css">
+  <link rel="stylesheet" href="/dashboards/club/css/club-members.css">
 </head>
-
-<body class="dashboard-body">
-
-<div class="layout">
-
+<body>
+<div class="app">
   <aside class="sidebar">
-    <div class="logo-icon">C</div>
-    <a href="/club/">🏠 Dashboard</a>
-    <a href="/club/members">👥 Members</a>
-    <a href="/club/events">🎉 Events</a>
-    <a href="/club/announcements">📢 Announcements</a>
-    <a href="/logout">🚪 Logout</a>
+    <div class="brand"><div class="brand-icon">C</div><span class="brand-name">Campus Connect</span></div>
+    <nav class="nav">
+      <a href="/club/"               class="nav-link">⬛ Dashboard</a>
+      <a href="/club/members"        class="nav-link active">👥 Members</a>
+      <a href="/club/events"         class="nav-link">🎉 Events</a>
+      <a href="/club/announcements"  class="nav-link">📢 Announcements</a>
+      <a href="/club/attendance"     class="nav-link">✅ Attendance</a>
+      <a href="/club/treasury"       class="nav-link">💰 Treasury</a>
+      <a href="/club/tasks"          class="nav-link">📋 Tasks</a>
+      <a href="/club/polls"          class="nav-link">🗳️ Polls</a>
+      <a href="/club/gallery"        class="nav-link">🖼️ Gallery</a>
+    </nav>
+    <a href="/logout" class="logout-btn">🚪 Logout</a>
   </aside>
 
-  <main class="dashboard">
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <p class="topbar-label">Club Management</p>
+        <h1 class="topbar-name">Club Members</h1>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-primary" id="inviteBtn" style="display:none;" onclick="openInvitePanel()">
+          📨 Invite Student
+        </button>
+        <div class="avatar" id="avatarLetter">C</div>
+      </div>
+    </header>
 
-    <section class="greeting">
-      <h1>👥 Club Members</h1>
-      <p>Approve requests and manage your club members</p>
-    </section>
+    <div class="content">
 
-    <!-- PENDING REQUESTS -->
-    <section class="card" style="width:100%; flex:none;">
-      <h2>⏳ Pending Join Requests <span id="pendingBadge" style="background:#f59e0b; color:white; font-size:13px; padding:2px 10px; border-radius:20px; margin-left:8px;">0</span></h2>
-      <div id="requestsList" style="display:flex; flex-direction:column; gap:12px; margin-top:16px;"></div>
-    </section>
+      <!-- MY ROLE STRIP -->
+      <div class="my-role-strip" id="myRoleStrip">
+        <span id="myRoleIcon">👤</span>
+        <strong id="myRoleName">Loading...</strong>
+        <span style="opacity:.6;">in</span>
+        <strong id="myClubNameStrip">Club</strong>
+      </div>
 
-    <!-- APPROVED MEMBERS -->
-    <section class="card" style="width:100%; flex:none;">
-      <h2>✅ Approved Members <span id="memberBadge" style="background:#22c55e; color:white; font-size:13px; padding:2px 10px; border-radius:20px; margin-left:8px;">0</span></h2>
-      <div id="membersList" style="display:flex; flex-direction:column; gap:12px; margin-top:16px;"></div>
-    </section>
+      <!-- INVITE PANEL (President/VP only) -->
+      <div class="card" id="invitePanel" style="display:none;">
+        <div class="card-header">
+          <div class="card-title">📨 Invite a Student to Join</div>
+          <button class="btn btn-outline btn-sm" onclick="closeInvitePanel()">✕ Close</button>
+        </div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">
+          Search by name, PRN, or email. The student will receive a notification and can accept or decline within 7 days.
+        </p>
+        <div style="display:flex;gap:10px;margin-bottom:16px;">
+          <input id="inviteSearchInput"
+            placeholder="🔍 Search by name, PRN or email..."
+            oninput="searchForInvite()"
+            style="flex:1;padding:10px 14px;border-radius:10px;border:1.5px solid var(--border);font-family:inherit;font-size:14px;">
+        </div>
+        <div id="inviteSearchResults" style="display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto;"></div>
 
+        <!-- Optional message -->
+        <div style="margin-top:16px;">
+          <label style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;display:block;margin-bottom:6px;">
+            Personal Message (optional)
+          </label>
+          <textarea id="inviteMessage" placeholder="e.g. Hi! We'd love to have you join our team..."
+            style="width:100%;padding:10px;border-radius:10px;border:1.5px solid var(--border);font-family:inherit;font-size:13px;resize:vertical;min-height:60px;"></textarea>
+        </div>
+        <div id="inviteMsg" style="margin-top:10px;font-size:13px;font-weight:600;min-height:20px;"></div>
+      </div>
+
+      <!-- SENT INVITATIONS (President/VP) -->
+      <div class="card" id="sentInvitationsCard" style="display:none;">
+        <div class="card-header">
+          <div class="card-title">📬 Sent Invitations
+            <span id="pendingInviteBadge" style="background:#f59e0b;color:white;font-size:11px;padding:2px 8px;border-radius:20px;margin-left:8px;">0</span>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="loadSentInvitations()">🔄 Refresh</button>
+        </div>
+        <div id="sentInvitationsList" style="display:flex;flex-direction:column;gap:10px;max-height:300px;overflow-y:auto;">
+          <p style="color:var(--muted);font-size:13px;">Loading...</p>
+        </div>
+      </div>
+
+      <!-- PENDING JOIN REQUESTS (President/VP only) -->
+      <div class="card" id="pendingSection" style="display:none;">
+        <div class="card-header">
+          <div class="card-title">⏳ Pending Join Requests
+            <span id="pendingBadge" style="background:#f59e0b;color:white;font-size:12px;padding:2px 10px;border-radius:20px;margin-left:8px;">0</span>
+          </div>
+        </div>
+        <div id="requestsList" style="display:flex;flex-direction:column;gap:12px;margin-top:16px;"></div>
+      </div>
+
+      <!-- APPROVED MEMBERS -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">✅ Approved Members
+            <span id="memberBadge" style="background:#22c55e;color:white;font-size:12px;padding:2px 10px;border-radius:20px;margin-left:8px;">0</span>
+          </div>
+          <input id="memberSearch" placeholder="🔍 Filter members..." oninput="filterMembers()"
+            style="width:200px;padding:7px 12px;border-radius:8px;border:1.5px solid var(--border);font-size:13px;">
+        </div>
+        <div id="membersList" style="display:flex;flex-direction:column;gap:12px;margin-top:16px;"></div>
+      </div>
+
+    </div>
   </main>
+</div>
+
+<!-- CHANGE POSITION MODAL -->
+<div class="modal-overlay" id="changePositionModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">🎖️ Change Position</div>
+      <button class="modal-close" onclick="closeModal('changePositionModal')">✕</button>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">
+      Member: <strong id="changePositionMemberName">—</strong>
+    </p>
+    <input type="hidden" id="changePositionUcId">
+    <div class="field-group">
+      <label>New Position</label>
+      <select id="changePositionSelect">
+        <option value="">Select Position</option>
+        <option value="Vice President">Vice President</option>
+        <option value="Secretary">Secretary</option>
+        <option value="Treasurer">Treasurer</option>
+        <option value="Technical Head">Technical Head</option>
+        <option value="Coordinator">Coordinator</option>
+        <option value="Event Coordinator">Event Coordinator</option>
+        <option value="Member">Member</option>
+      </select>
+      <p style="font-size:12px;color:var(--muted);margin-top:6px;">⚠️ President position can only be set by Admin.</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary btn-full" onclick="savePositionChange()">💾 Save Position</button>
+      <button class="btn btn-outline" onclick="closeModal('changePositionModal')">Cancel</button>
+    </div>
+    <div id="changePositionMsg" class="msg"></div>
+  </div>
 </div>
 
 <script src="/dashboards/club/js/club-members.js"></script>

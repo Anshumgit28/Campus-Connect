@@ -7,10 +7,10 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/dashboards/student/css/dashboard.css">
   <link rel="stylesheet" href="/dashboards/student/css/academics.css">
+  <link rel="stylesheet" href="/dashboards/student/css/academics-extra.css">
 </head>
 <body>
 <div class="app">
-
   <aside class="sidebar">
     <div class="brand">
       <div class="brand-icon">CC</div>
@@ -48,12 +48,29 @@
 
       <!-- ATTENDANCE TAB -->
       <div id="tab-attendance" class="tab-panel active card">
-        <div class="card-title">📊 Attendance</div>
-        <div class="attend-big" id="attendanceValue">—</div>
-        <div class="attend-track">
-          <div class="attend-fill" id="attendanceBar" style="width:0%"></div>
+        <div class="card-title">📊 Attendance Overview</div>
+
+        <!-- Overall attendance bar -->
+        <div class="overall-att-section">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;">Overall Attendance</span>
+            <span id="overallAttPct" style="font-family:'DM Serif Display',serif;font-size:28px;color:var(--indigo);">—</span>
+          </div>
+          <div class="attend-track">
+            <div class="attend-fill" id="overallAttBar" style="width:0%"></div>
+          </div>
+          <div id="overallAttNote" class="attend-note" style="margin-top:8px;"></div>
         </div>
-        <div class="attend-note" id="attendanceNote"></div>
+
+        <hr style="margin:20px 0;border:none;border-top:1px solid var(--border);">
+
+        <!-- Per-course attendance -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div class="card-title" style="margin-bottom:0;">Per-Course Attendance</div>
+        </div>
+        <div id="courseAttendanceList">
+          <p style="color:var(--muted);">Loading course-wise attendance...</p>
+        </div>
       </div>
 
       <!-- PERFORMANCE TAB -->

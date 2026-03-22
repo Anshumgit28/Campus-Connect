@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tasks | Club</title>
+  <link rel="stylesheet" href="/dashboards/club/css/club-features.css">
+</head>
+<body>
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">C</div>
+      <span class="brand-name">Campus Connect</span>
+    </div>
+    <nav class="nav">
+      <a href="/club/"               class="nav-link">⬛ Dashboard</a>
+      <a href="/club/members"        class="nav-link">👥 Members</a>
+      <a href="/club/events"         class="nav-link">🎉 Events</a>
+      <a href="/club/announcements"  class="nav-link">📢 Announcements</a>
+      <a href="/club/attendance"     class="nav-link">✅ Attendance</a>
+      <a href="/club/treasury"       class="nav-link">💰 Treasury</a>
+      <a href="/club/tasks"          class="nav-link active">📋 Tasks</a>
+      <a href="/club/polls"          class="nav-link">🗳️ Polls</a>
+      <a href="/club/gallery"        class="nav-link">🖼️ Gallery</a>
+    </nav>
+    <a href="/logout" class="logout-btn">🚪 Logout</a>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <p class="topbar-label">Club Management</p>
+        <h1 class="topbar-name">Task Assignment</h1>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-primary" onclick="openCreateTaskModal()">➕ New Task</button>
+        <div class="avatar" id="avatarLetter">C</div>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- STATS -->
+      <div class="grid-4">
+        <div class="stat-card amber">
+          <span class="stat-icon">⏳</span>
+          <div class="stat-label">Pending</div>
+          <div class="stat-val" id="statPending">0</div>
+        </div>
+        <div class="stat-card indigo">
+          <span class="stat-icon">🔄</span>
+          <div class="stat-label">In Progress</div>
+          <div class="stat-val" id="statInProgress">0</div>
+        </div>
+        <div class="stat-card green">
+          <span class="stat-icon">✅</span>
+          <div class="stat-label">Done</div>
+          <div class="stat-val" id="statDone">0</div>
+        </div>
+        <div class="stat-card red">
+          <span class="stat-icon">🚨</span>
+          <div class="stat-label">Overdue</div>
+          <div class="stat-val" id="statOverdue">0</div>
+        </div>
+      </div>
+
+      <!-- FILTER BAR -->
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <select id="filterStatus" onchange="applyFilters()" style="font-size:13px;padding:8px 12px;border-radius:9px;border:1.5px solid var(--border);">
+          <option value="">All Status</option>
+          <option value="pending">Pending</option>
+          <option value="in_progress">In Progress</option>
+          <option value="done">Done</option>
+        </select>
+        <select id="filterPriority" onchange="applyFilters()" style="font-size:13px;padding:8px 12px;border-radius:9px;border:1.5px solid var(--border);">
+          <option value="">All Priorities</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+        <select id="filterMember" onchange="applyFilters()" style="font-size:13px;padding:8px 12px;border-radius:9px;border:1.5px solid var(--border);">
+          <option value="">All Members</option>
+        </select>
+        <span id="taskCount" style="color:var(--muted);font-size:13px;"></span>
+      </div>
+
+      <!-- TASK BOARD: 3 COLUMNS -->
+      <div class="grid-3" id="taskBoard">
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+            ⏳ Pending <span id="pendingCount" class="badge badge-amber">0</span>
+          </div>
+          <div id="col-pending" style="display:flex;flex-direction:column;gap:12px;"></div>
+        </div>
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+            🔄 In Progress <span id="inProgressCount" class="badge badge-blue">0</span>
+          </div>
+          <div id="col-in_progress" style="display:flex;flex-direction:column;gap:12px;"></div>
+        </div>
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+            ✅ Done <span id="doneCount" class="badge badge-green">0</span>
+          </div>
+          <div id="col-done" style="display:flex;flex-direction:column;gap:12px;"></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- CREATE TASK MODAL -->
+<div class="modal-overlay" id="createTaskModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">📋 Create Task</div>
+      <button class="modal-close" onclick="closeModal('createTaskModal')">✕</button>
+    </div>
+    <div class="field-group">
+      <label>Task Title *</label>
+      <input id="taskTitle" placeholder="e.g. Design event poster">
+    </div>
+    <div class="field-group">
+      <label>Description</label>
+      <textarea id="taskDesc" placeholder="Details about the task..."></textarea>
+    </div>
+    <div class="grid-2-sm">
+      <div class="field-group">
+        <label>Assign To</label>
+        <select id="taskAssignee">
+          <option value="">Unassigned</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label>Priority</label>
+        <select id="taskPriority">
+          <option value="medium">Medium</option>
+          <option value="high">High 🔴</option>
+          <option value="low">Low 🟢</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-group">
+      <label>Due Date</label>
+      <input type="date" id="taskDueDate">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary btn-full" onclick="createTask()">✅ Create Task</button>
+      <button class="btn btn-outline" onclick="closeModal('createTaskModal')">Cancel</button>
+    </div>
+    <div id="createTaskMsg" class="msg"></div>
+  </div>
+</div>
+
+<script src="/dashboards/club/js/club-tasks.js"></script>
+</body>
+</html>

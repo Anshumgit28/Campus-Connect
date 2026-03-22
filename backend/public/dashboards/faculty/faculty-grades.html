@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Grade Assignments | Faculty</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/dashboards/faculty/css/faculty-dashboard.css">
+  <style>
+    .submission-card{background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:18px;margin-bottom:12px;}
+    .grade-form{display:flex;gap:10px;align-items:flex-end;margin-top:12px;flex-wrap:wrap;}
+    .grade-input{padding:9px 14px;border-radius:9px;border:1.5px solid var(--border);font-size:14px;width:100px;}
+    .grade-input:focus{outline:none;border-color:var(--accent2);}
+    .feedback-input{flex:1;min-width:200px;padding:9px 14px;border-radius:9px;border:1.5px solid var(--border);font-size:14px;}
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-brand"><div class="brand-badge">F</div><div class="brand-title">Campus Connect</div><div class="brand-sub">Faculty Portal</div></div>
+    <nav class="nav">
+      <div class="nav-section-label">Main</div>
+      <a class="nav-link" href="/faculty/">⬛ Dashboard</a>
+      <a class="nav-link" href="/faculty/students">👨‍🎓 Students</a>
+      <a class="nav-link" href="/faculty/academics">📚 Academics</a>
+      <div class="nav-section-label">Tools</div>
+      <a class="nav-link" href="/faculty/attendance">✅ Attendance</a>
+      <a class="nav-link" href="/faculty/courses">🎓 My Courses</a>
+      <a class="nav-link active" href="/faculty/grades">🏅 Grade Assignments</a>
+    </nav>
+    <div class="sidebar-footer"><a href="/logout" class="logout-link">🚪 Logout</a></div>
+  </aside>
+  <main class="main">
+    <header class="topbar">
+      <div><div class="topbar-label">Faculty</div><div class="topbar-name">Grade Assignments</div></div>
+      <div class="avatar-wrap"><div class="avatar" id="avatarLetter">F</div><span class="avatar-name" id="facultyName">Faculty</span></div>
+    </header>
+    <div class="page active" style="padding:28px 36px;display:flex;flex-direction:column;gap:20px;">
+      <!-- Course selector -->
+      <div class="card">
+        <div class="card-header"><div class="card-title">📚 Select Course & Assignment</div></div>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;">
+          <div class="input-group" style="flex:1;min-width:200px;">
+            <label>Course</label>
+            <select id="courseSelect" onchange="loadAssignmentsForCourse()">
+              <option value="">— Select Course —</option>
+            </select>
+          </div>
+          <div class="input-group" style="flex:1;min-width:200px;">
+            <label>Assignment</label>
+            <select id="assignmentSelect" onchange="loadSubmissions()">
+              <option value="">— Select Assignment —</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <!-- Submissions list -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📝 Submissions</div>
+          <span id="submissionCount" style="font-size:13px;color:var(--muted);">Select an assignment above</span>
+        </div>
+        <div id="submissionsList">
+          <div class="empty-state"><div class="empty-icon">📝</div><p>Select a course and assignment to view submissions</p></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<script>
+"use strict";
+document.addEventListener("DOMContentLoaded", () => {
+  loadFacultyInfo();
+  loadCourses();
+});
+
+function loadFacultyInfo() {
+  fetch("/faculty/data", { credentials:"include" })
+    .then(r => r.json())
+    .then(d => {
+      const av = document.getElementById("avatarLetter");
+      const fn = document.getElementById("facultyName");
+      if (av) av.innerText = (d.name||"F")[0].toUpperCase();
+      if (fn) fn.innerText = d.name || "Faculty";
+    }).catch(() => {});
+}
+
+function loadCourses() {
+  fetch("/faculty/courses/my", { credentials:"include" })
+    .then(r => r.json())
+    .then(courses => {
+      const sel = document.getElementById("courseSelect");
+      if (!courses.length) { sel.innerHTML = '<option value="">No courses yet</option>'; return; }
+      sel.innerHTML = '<option value="">— Select Course —</option>' +
+        courses.map(c => `<option value="${c.id}">${esc(c.name)}${c.code?' ('+c.code+')':''}</option>`).join("");
+    });
+}
+
+function loadAssignmentsForCourse() {
+  const cid = document.getElementById("courseSelect").value;
+  const sel = document.getElementById("assignmentSelect");
+  sel.innerHTML = '<option value="">— Select Assignment —</option>';
+  document.getElementById("submissionsList").innerHTML = '<div class="empty-state"><div class="empty-icon">📝</div><p>Select an assignment</p></div>';
+  if (!cid) return;
+
+  fetch(`/faculty/courses/${cid}/assignments`, { credentials:"include" })
+    .then(r => r.json())
+    .then(assignments => {
+      if (!assignments.length) { sel.innerHTML = '<option value="">No assignments yet</option>'; return; }
+      sel.innerHTML = '<option value="">— Select Assignment —</option>' +
+        assignments.map(a => `<option value="${a.id}" data-max="${a.max_marks||10}">${esc(a.title)} (max ${a.max_marks||10} marks)</option>`).join("");
+    });
+}
+
+function loadSubmissions() {
+  const aid = document.getElementById("assignmentSelect").value;
+  const cnt = document.getElementById("submissionCount");
+  const list = document.getElementById("submissionsList");
+  if (!aid) { list.innerHTML = '<div class="empty-state"><div class="empty-icon">📝</div><p>Select an assignment</p></div>'; return; }
+
+  const selEl = document.getElementById("assignmentSelect");
+  const maxMarks = selEl.options[selEl.selectedIndex]?.dataset?.max || "10";
+
+  list.innerHTML = '<p style="color:var(--muted);padding:20px;">Loading submissions...</p>';
+
+  fetch(`/faculty/assignment/${aid}/submissions`, { credentials:"include" })
+    .then(r => r.json())
+    .then(data => {
+      const subs = Array.isArray(data) ? data : (data.submitted || []);
+      cnt.innerText = `${subs.length} submission${subs.length!==1?"s":""}`;
+      if (!subs.length) {
+        list.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><p>No submissions yet</p></div>';
+        return;
+      }
+      list.innerHTML = subs.map(s => {
+        const isGraded = s.marks !== null && s.marks !== undefined;
+        return `
+          <div class="submission-card">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+              <div>
+                <strong style="font-size:15px;">${esc(s.username||"—")}</strong>
+                <span style="font-size:12px;color:var(--muted);margin-left:8px;">${esc(s.email||"—")}</span>
+                ${s.prn?`<span style="font-size:12px;color:var(--muted);margin-left:8px;">PRN: ${esc(s.prn)}</span>`:""}
+                <p style="font-size:12px;color:var(--muted);margin-top:4px;">
+                  Submitted: ${s.submitted_at ? new Date(s.submitted_at).toLocaleString("en-IN",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}) : "—"}
+                </p>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center;">
+                ${s.file_path ? `<a href="${s.file_path}" target="_blank" class="btn btn-outline btn-sm" style="padding:5px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:white;cursor:pointer;text-decoration:none;color:var(--ink);">📥 Download</a>` : ""}
+                ${isGraded
+                  ? `<span style="background:#d1fae5;color:#065f46;padding:4px 10px;border-radius:8px;font-size:13px;font-weight:700;">🎯 ${s.marks}/${s.graded_max||maxMarks}</span>`
+                  : ""}
+              </div>
+            </div>
+            ${s.text_content ? `<div style="margin-top:8px;padding:10px;background:var(--bg);border-radius:8px;border:1px solid var(--border);font-size:13px;max-height:80px;overflow-y:auto;">${esc(s.text_content)}</div>` : ""}
+            <div class="grade-form" id="grade-form-${s.id}">
+              <div class="input-group" style="margin:0;">
+                <label style="font-size:11px;">Marks (out of ${maxMarks})</label>
+                <input type="number" class="grade-input" id="marks-${s.id}" placeholder="e.g. ${maxMarks}" min="0" max="${maxMarks}" value="${isGraded?(s.marks||""):""}">
+              </div>
+              <div class="input-group" style="flex:1;margin:0;">
+                <label style="font-size:11px;">Feedback (optional)</label>
+                <input class="feedback-input" id="feedback-${s.id}" placeholder="Comments for student..." value="${isGraded?(s.feedback||""):""}">
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="saveGrade(${s.id},${maxMarks})">
+                💾 ${isGraded?"Update":"Save"} Grade
+              </button>
+            </div>
+            <div id="grade-msg-${s.id}" style="font-size:13px;font-weight:600;margin-top:6px;"></div>
+          </div>`;
+      }).join("");
+    })
+    .catch(() => { list.innerHTML = '<p style="color:red;padding:20px;">Failed to load submissions</p>'; });
+}
+
+function saveGrade(submissionId, maxMarks) {
+  const marks    = document.getElementById("marks-"+submissionId)?.value;
+  const feedback = document.getElementById("feedback-"+submissionId)?.value || "";
+  const msg      = document.getElementById("grade-msg-"+submissionId);
+
+  if (marks === "" || marks === null) { if(msg){msg.style.color="red";msg.innerText="⚠️ Enter marks";} return; }
+  const m = parseFloat(marks);
+  if (isNaN(m)||m<0||m>maxMarks) { if(msg){msg.style.color="red";msg.innerText=`⚠️ Marks must be 0–${maxMarks}`;} return; }
+
+  if (msg) { msg.style.color="#6366f1"; msg.innerText="⏳ Saving..."; }
+
+  fetch("/faculty/assignment/grade", {
+    method:"POST", credentials:"include",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({ submission_id: submissionId, marks: m, feedback, max_marks: maxMarks })
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.success) { if(msg){msg.style.color="green";msg.innerText="✅ Grade saved!";} setTimeout(()=>loadSubmissions(),800); }
+    else { if(msg){msg.style.color="red";msg.innerText="❌ "+(d.message||"Failed");} }
+  })
+  .catch(()=>{ if(msg){msg.style.color="red";msg.innerText="❌ Network error";} });
+}
+
+function esc(str) {
+  if (!str) return "";
+  return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+}
+</script>
+</body>
+</html>

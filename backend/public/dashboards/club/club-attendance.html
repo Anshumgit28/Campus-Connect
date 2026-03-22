@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meeting Attendance | Club</title>
+  <link rel="stylesheet" href="/dashboards/club/css/club-features.css">
+</head>
+<body>
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">C</div>
+      <span class="brand-name">Campus Connect</span>
+    </div>
+    <nav class="nav">
+      <a href="/club/"               class="nav-link">⬛ Dashboard</a>
+      <a href="/club/members"        class="nav-link">👥 Members</a>
+      <a href="/club/events"         class="nav-link">🎉 Events</a>
+      <a href="/club/announcements"  class="nav-link">📢 Announcements</a>
+      <a href="/club/attendance"     class="nav-link active">✅ Attendance</a>
+      <a href="/club/treasury"       class="nav-link">💰 Treasury</a>
+      <a href="/club/tasks"          class="nav-link">📋 Tasks</a>
+      <a href="/club/polls"          class="nav-link">🗳️ Polls</a>
+      <a href="/club/gallery"        class="nav-link">🖼️ Gallery</a>
+    </nav>
+    <a href="/logout" class="logout-btn">🚪 Logout</a>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <p class="topbar-label">Club Management</p>
+        <h1 class="topbar-name">Meeting Attendance</h1>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-primary" onclick="openCreateMeetingModal()">
+          ➕ New Meeting
+        </button>
+        <div class="avatar" id="avatarLetter">C</div>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- STATS -->
+      <div class="grid-4" id="attendanceStats">
+        <div class="stat-card indigo">
+          <span class="stat-icon">📅</span>
+          <div class="stat-label">Total Meetings</div>
+          <div class="stat-val" id="statMeetings">0</div>
+        </div>
+        <div class="stat-card green">
+          <span class="stat-icon">✅</span>
+          <div class="stat-label">Avg Attendance</div>
+          <div class="stat-val" id="statAvgAtt">0%</div>
+        </div>
+        <div class="stat-card amber">
+          <span class="stat-icon">👥</span>
+          <div class="stat-label">Active Members</div>
+          <div class="stat-val" id="statMembers">0</div>
+        </div>
+        <div class="stat-card teal">
+          <span class="stat-icon">🏆</span>
+          <div class="stat-label">Best Attendance</div>
+          <div class="stat-val" id="statBest">—</div>
+          <div class="stat-sub" id="statBestName"></div>
+        </div>
+      </div>
+
+      <!-- TABS -->
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="showTab('meetings', this)">📅 Meetings</button>
+        <button class="tab-btn" onclick="showTab('members', this)">👥 Member Report</button>
+      </div>
+
+      <!-- MEETINGS TAB -->
+      <div id="tab-meetings">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📅 All Meetings</div>
+            <button class="btn btn-outline btn-sm" onclick="loadMeetings()">🔄 Refresh</button>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th><th>Title</th><th>Present</th>
+                  <th>Late</th><th>Absent</th><th>Attendance %</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="meetingsTableBody">
+                <tr><td colspan="7" class="table-empty">Loading meetings...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- MEMBER REPORT TAB -->
+      <div id="tab-members" style="display:none;">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">👥 Member Attendance Report</div>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Member</th><th>Class</th><th>Present</th>
+                  <th>Late</th><th>Absent</th><th>Attendance %</th><th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="memberReportBody">
+                <tr><td colspan="7" class="table-empty">Select a meeting to view reports</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </main>
+</div>
+
+<!-- CREATE MEETING MODAL -->
+<div class="modal-overlay" id="createMeetingModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">📅 Create Meeting</div>
+      <button class="modal-close" onclick="closeModal('createMeetingModal')">✕</button>
+    </div>
+    <div class="field-group">
+      <label>Meeting Title *</label>
+      <input id="meetingTitle" placeholder="e.g. Weekly Sync, Project Planning">
+    </div>
+    <div class="field-group">
+      <label>Date *</label>
+      <input type="date" id="meetingDate">
+    </div>
+    <div class="field-group">
+      <label>Description (optional)</label>
+      <textarea id="meetingDesc" placeholder="Meeting agenda or notes..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary btn-full" onclick="createMeeting()">✅ Create & Mark Attendance</button>
+      <button class="btn btn-outline" onclick="closeModal('createMeetingModal')">Cancel</button>
+    </div>
+    <div id="createMeetingMsg" class="msg"></div>
+  </div>
+</div>
+
+<!-- MARK ATTENDANCE MODAL -->
+<div class="modal-overlay" id="markAttModal">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">✅ Mark Attendance</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:2px;" id="markAttSubtitle"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('markAttModal')">✕</button>
+    </div>
+
+    <!-- Quick Actions -->
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+      <span style="font-size:13px;color:var(--muted);align-self:center;">Mark all:</span>
+      <button class="btn btn-success btn-sm" onclick="markAllAs('present')">✅ All Present</button>
+      <button class="btn btn-amber btn-sm"   onclick="markAllAs('late')">⏰ All Late</button>
+      <button class="btn btn-danger btn-sm"  onclick="markAllAs('absent')">❌ All Absent</button>
+    </div>
+
+    <!-- Summary -->
+    <div class="summary-row" id="attSummary" style="margin-bottom:16px;"></div>
+
+    <!-- Member List -->
+    <div id="memberAttList" style="display:flex;flex-direction:column;gap:10px;max-height:380px;overflow-y:auto;"></div>
+
+    <div class="modal-actions" style="margin-top:18px;">
+      <button class="btn btn-primary btn-full" onclick="saveAttendance()">💾 Save Attendance</button>
+    </div>
+    <div id="markAttMsg" class="msg"></div>
+  </div>
+</div>
+
+<script src="/dashboards/club/js/club-attendance.js"></script>
+</body>
+</html>

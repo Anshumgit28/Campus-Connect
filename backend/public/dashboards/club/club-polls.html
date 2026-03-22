@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Polls | Club</title>
+  <link rel="stylesheet" href="/dashboards/club/css/club-features.css">
+</head>
+<body>
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">C</div>
+      <span class="brand-name">Campus Connect</span>
+    </div>
+    <nav class="nav">
+      <a href="/club/"               class="nav-link">⬛ Dashboard</a>
+      <a href="/club/members"        class="nav-link">👥 Members</a>
+      <a href="/club/events"         class="nav-link">🎉 Events</a>
+      <a href="/club/announcements"  class="nav-link">📢 Announcements</a>
+      <a href="/club/attendance"     class="nav-link">✅ Attendance</a>
+      <a href="/club/treasury"       class="nav-link">💰 Treasury</a>
+      <a href="/club/tasks"          class="nav-link">📋 Tasks</a>
+      <a href="/club/polls"          class="nav-link active">🗳️ Polls</a>
+      <a href="/club/gallery"        class="nav-link">🖼️ Gallery</a>
+    </nav>
+    <a href="/logout" class="logout-btn">🚪 Logout</a>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <p class="topbar-label">Club Management</p>
+        <h1 class="topbar-name">Polls & Voting</h1>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-primary" onclick="openCreatePollModal()">➕ New Poll</button>
+        <div class="avatar" id="avatarLetter">C</div>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- TABS -->
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="showTab('active', this)">🟢 Active Polls</button>
+        <button class="tab-btn" onclick="showTab('closed', this)">🔒 Closed Polls</button>
+      </div>
+
+      <!-- ACTIVE POLLS -->
+      <div id="tab-active">
+        <div id="activePollsContainer">
+          <div class="empty-state">
+            <span class="empty-icon">🗳️</span>
+            <p>Loading polls...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- CLOSED POLLS -->
+      <div id="tab-closed" style="display:none;">
+        <div id="closedPollsContainer">
+          <div class="empty-state">
+            <span class="empty-icon">🔒</span>
+            <p>No closed polls</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- CREATE POLL MODAL -->
+<div class="modal-overlay" id="createPollModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">🗳️ Create Poll</div>
+      <button class="modal-close" onclick="closeModal('createPollModal')">✕</button>
+    </div>
+
+    <div class="field-group">
+      <label>Question *</label>
+      <input id="pollQuestion" placeholder="e.g. Which theme for the annual event?">
+    </div>
+
+    <div class="field-group">
+      <label>Options * (minimum 2)</label>
+      <div id="pollOptionsList">
+        <div class="option-row" style="display:flex;gap:8px;margin-bottom:8px;">
+          <input class="poll-opt-input" placeholder="Option 1" style="flex:1;">
+          <button class="btn btn-outline btn-sm" onclick="removeOptionRow(this)" style="flex-shrink:0;">✕</button>
+        </div>
+        <div class="option-row" style="display:flex;gap:8px;margin-bottom:8px;">
+          <input class="poll-opt-input" placeholder="Option 2" style="flex:1;">
+          <button class="btn btn-outline btn-sm" onclick="removeOptionRow(this)" style="flex-shrink:0;">✕</button>
+        </div>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="addOptionRow()" style="margin-top:4px;">+ Add Option</button>
+    </div>
+
+    <div class="field-group">
+      <label>Closes At (optional)</label>
+      <input type="datetime-local" id="pollEndsAt">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-primary btn-full" onclick="createPoll()">🗳️ Create Poll</button>
+      <button class="btn btn-outline" onclick="closeModal('createPollModal')">Cancel</button>
+    </div>
+    <div id="createPollMsg" class="msg"></div>
+  </div>
+</div>
+
+<script src="/dashboards/club/js/club-polls.js"></script>
+</body>
+</html>

@@ -3,57 +3,77 @@
 <head>
   <meta charset="UTF-8">
   <title>Club Announcements | Campus Connect</title>
-  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/dashboards/club/css/club-features.css">
 </head>
-
-<body class="dashboard-body">
-
-<div class="layout">
-
+<body>
+<div class="app">
   <aside class="sidebar">
-    <div class="logo-icon">C</div>
-    <a href="/club/">🏠 Dashboard</a>
-    <a href="/club/members">👥 Members</a>
-    <a href="/club/events">🎉 Events</a>
-    <a href="/club/announcements">📢 Announcements</a>
-    <a href="/logout">🚪 Logout</a>
+    <div class="brand">
+      <div class="brand-icon">C</div>
+      <span class="brand-name">Campus Connect</span>
+    </div>
+    <nav class="nav">
+      <a href="/club/"               class="nav-link">⬛ Dashboard</a>
+      <a href="/club/members"        class="nav-link">👥 Members</a>
+      <a href="/club/events"         class="nav-link">🎉 Events</a>
+      <a href="/club/announcements"  class="nav-link active">📢 Announcements</a>
+      <a href="/club/attendance"     class="nav-link">✅ Attendance</a>
+      <a href="/club/treasury"       class="nav-link">💰 Treasury</a>
+      <a href="/club/tasks"          class="nav-link">📋 Tasks</a>
+      <a href="/club/polls"          class="nav-link">🗳️ Polls</a>
+      <a href="/club/gallery"        class="nav-link">🖼️ Gallery</a>
+    </nav>
+    <a href="/logout" class="logout-btn">🚪 Logout</a>
   </aside>
 
-  <main class="dashboard">
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <p class="topbar-label">Club Management</p>
+        <h1 class="topbar-name">Announcements</h1>
+      </div>
+      <div class="topbar-right">
+        <!-- Post button — only shown to President/VP -->
+        <button class="btn btn-primary" id="postBtn" style="display:none;"
+          onclick="togglePostForm()">➕ New Announcement</button>
+        <div class="avatar" id="avatarLetter">C</div>
+      </div>
+    </header>
 
-    <section class="greeting">
-      <h1>📢 Club Announcements</h1>
-      <p>Post announcements visible to all club members</p>
-    </section>
+    <div class="content">
 
-    <section class="main-grid">
-
-      <!-- POST FORM -->
-      <div class="card">
-        <h2>✏️ New Announcement</h2>
-        <div style="display:flex; flex-direction:column; gap:12px; margin-top:16px;">
-          <textarea id="announceText" placeholder="Write your announcement here..." rows="5"
-            style="padding:14px; border-radius:12px; border:1px solid var(--border); font-family:inherit; font-size:15px; resize:vertical; transition:.25s;"
-            onfocus="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 4px rgba(99,102,241,.12)';"
-            onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none';"></textarea>
-          <button onclick="postAnnouncement()"
-            style="padding:14px; border-radius:10px; border:none; background:linear-gradient(135deg,var(--primary),var(--secondary)); color:white; font-weight:700; font-size:15px; cursor:pointer; transition:.25s;"
-            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 25px rgba(99,102,241,.3)';"
-            onmouseout="this.style.transform=''; this.style.boxShadow='';">
-            📢 Post Announcement
-          </button>
-          <p id="announceMsg" style="font-weight:600; text-align:center;"></p>
+      <!-- POST FORM (President/VP only, single form) -->
+      <div class="card" id="postForm" style="display:none;">
+        <div class="card-header">
+          <div class="card-title">📢 New Announcement</div>
+          <button class="btn btn-outline btn-sm" onclick="togglePostForm()">✕ Close</button>
+        </div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">
+          This announcement will be visible to all club members.
+        </p>
+        <textarea id="announceText" placeholder="Write your announcement here..." rows="5"
+          style="width:100%;padding:14px;border-radius:12px;border:1.5px solid var(--border);
+            font-family:'DM Sans',sans-serif;font-size:15px;resize:vertical;transition:.2s;"
+          onfocus="this.style.borderColor='var(--primary)';this.style.boxShadow='0 0 0 3px rgba(99,102,241,.12)';"
+          onblur="this.style.borderColor='var(--border)';this.style.boxShadow='';"></textarea>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:14px;">
+          <button class="btn btn-primary" onclick="postAnnouncement()">📢 Post Announcement</button>
+          <span id="announceMsg" style="font-size:13px;font-weight:600;"></span>
         </div>
       </div>
 
-      <!-- POSTED ANNOUNCEMENTS -->
+      <!-- ANNOUNCEMENTS LIST -->
       <div class="card">
-        <h2>📋 Posted Announcements</h2>
-        <div id="announceList" style="display:flex; flex-direction:column; gap:14px; margin-top:16px; max-height:500px; overflow-y:auto;"></div>
+        <div class="card-header">
+          <div class="card-title">📋 All Announcements</div>
+          <span id="countBadge" style="font-size:13px;color:var(--muted);"></span>
+        </div>
+        <div id="announceList" style="display:flex;flex-direction:column;gap:14px;margin-top:16px;max-height:600px;overflow-y:auto;">
+          <div class="empty-state"><span class="empty-icon">📢</span><p>Loading announcements...</p></div>
+        </div>
       </div>
 
-    </section>
-
+    </div>
   </main>
 </div>
 

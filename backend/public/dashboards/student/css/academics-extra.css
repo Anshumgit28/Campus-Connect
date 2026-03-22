@@ -1,0 +1,104 @@
+/* ============================================================
+   ACADEMICS EXTRA — academics-extra.css
+   Per-course attendance, improved layout
+============================================================ */
+
+.overall-att-section {
+  padding: 18px 20px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #eef2ff, #f5f3ff);
+  border: 1.5px solid #c7d2fe;
+  margin-bottom: 8px;
+}
+
+.course-att-card {
+  padding: 16px 18px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  margin-bottom: 10px;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+.course-att-card:hover {
+  border-color: var(--indigo);
+  box-shadow: 0 4px 14px rgba(79,70,229,.08);
+}
+
+.course-att-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  gap: 10px;
+}
+
+.course-att-name {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text);
+}
+
+.course-att-meta {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.course-att-pct {
+  font-family: 'DM Serif Display', serif;
+  font-size: 26px;
+  font-weight: 400;
+  flex-shrink: 0;
+}
+
+.att-pct-good { color: #16a34a; }
+.att-pct-warn { color: #d97706; }
+.att-pct-crit { color: #dc2626; }
+
+.att-type-row {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.att-type-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.att-chip-lec { background: #dbeafe; color: #1e40af; }
+.att-chip-lab { background: #ede9fe; color: #5b21b6; }
+
+.att-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  margin-left: 8px;
+}
+
+.att-badge-good { background: #dcfce7; color: #14532d; }
+.att-badge-warn { background: #fef3c7; color: #92400e; }
+.att-badge-crit { background: #fee2e2; color: #991b1b; }
+
+/* No data state */
+.no-courses-msg {
+  padding: 30px 20px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.no-courses-msg .icon {
+  font-size: 40px;
+  margin-bottom: 10px;
+  opacity: .4;
+}

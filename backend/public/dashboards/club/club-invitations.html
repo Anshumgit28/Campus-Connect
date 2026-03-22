@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Club Invitations | Campus Connect</title>
+  <link rel="stylesheet" href="/dashboards/club/css/club-features.css">
+  <style>
+    /* ── INVITATION CARD ── */
+    .invite-card {
+      border-radius: 16px;
+      border: 1.5px solid var(--border);
+      background: var(--bg);
+      padding: 20px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      transition: box-shadow .15s, border-color .15s;
+      animation: fadeInUp .3s ease both;
+    }
+    .invite-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,.08); }
+
+    .invite-card.accepted  { border-color: #22c55e; background: #f0fdf4; }
+    .invite-card.declined  { border-color: #ef4444; background: #fef2f2; opacity: .7; }
+    .invite-card.expired   { border-color: #d1d5db; background: #f9fafb; opacity: .6; }
+
+    .club-logo {
+      width: 52px; height: 52px; border-radius: 14px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white; font-size: 22px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .invite-top    { display: flex; align-items: flex-start; gap: 14px; }
+    .invite-detail { flex: 1; }
+    .invite-club-name { font-size: 17px; font-weight: 800; color: var(--ink); }
+    .invite-from   { font-size: 12px; color: var(--muted); margin-top: 3px; }
+    .invite-expiry { font-size: 12px; font-weight: 600; color: #f59e0b; margin-top: 4px; }
+
+    .invite-message {
+      background: var(--surface);
+      border-left: 3px solid #6366f1;
+      padding: 10px 14px;
+      border-radius: 0 8px 8px 0;
+      font-size: 13px;
+      color: var(--ink);
+      font-style: italic;
+    }
+
+    .invite-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    .invite-status-label {
+      padding: 6px 16px; border-radius: 20px;
+      font-size: 13px; font-weight: 700;
+    }
+    .label-accepted { background: #d1fae5; color: #065f46; }
+    .label-declined { background: #fee2e2; color: #991b1b; }
+    .label-expired  { background: #f3f4f6; color: #6b7280; }
+
+    @keyframes fadeInUp {
+      from { opacity:0; transform: translateY(12px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+    .empty-state-icon { font-size: 48px; margin-bottom: 14px; }
+    .empty-state-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--ink); }
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand"><div class="brand-icon">C</div><span class="brand-name">Campus Connect</span></div>
+    <nav class="nav">
+      <a href="/club/"               class="nav-link">⬛ Dashboard</a>
+      <a href="/club/members"        class="nav-link">👥 Members</a>
+      <a href="/club/events"         class="nav-link">🎉 Events</a>
+      <a href="/club/announcements"  class="nav-link">📢 Announcements</a>
+      <a href="/club/attendance"     class="nav-link">✅ Attendance</a>
+      <a href="/club/treasury"       class="nav-link">💰 Treasury</a>
+      <a href="/club/tasks"          class="nav-link">📋 Tasks</a>
+      <a href="/club/polls"          class="nav-link">🗳️ Polls</a>
+      <a href="/club/gallery"        class="nav-link">🖼️ Gallery</a>
+    </nav>
+    <a href="/logout" class="logout-btn">🚪 Logout</a>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <p class="topbar-label">Club Portal</p>
+        <h1 class="topbar-name">My Invitations</h1>
+      </div>
+      <div class="topbar-right">
+        <div class="avatar" id="avatarLetter">S</div>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- Pending invites -->
+      <div class="card" id="pendingSection">
+        <div class="card-header" style="margin-bottom:20px;">
+          <div>
+            <div class="card-title">📨 Pending Invitations
+              <span id="pendingBadge" style="background:#f59e0b;color:white;font-size:11px;
+                padding:2px 8px;border-radius:20px;margin-left:8px;display:none;">0</span>
+            </div>
+            <p style="font-size:13px;color:var(--muted);margin-top:4px;">
+              These invitations expire automatically if not responded to within 7 days.
+            </p>
+          </div>
+        </div>
+        <div id="pendingList" style="display:flex;flex-direction:column;gap:14px;">
+          <p style="color:var(--muted);">Loading...</p>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", async () => {
+    // Set avatar
+    try {
+      const r = await fetch("/club/my-identity");
+      const d = await r.json();
+      const av = document.getElementById("avatarLetter");
+      if (av) av.textContent = (d.username || "S")[0].toUpperCase();
+    } catch(_) {}
+
+    loadInvitations();
+  });
+
+  async function loadInvitations() {
+    try {
+      const res = await fetch("/club/invitations/mine");
+      const invites = await res.json();
+
+      const badge = document.getElementById("pendingBadge");
+      const pending = invites.filter(i => i.status === "pending");
+
+      if (badge) {
+        badge.textContent = pending.length;
+        badge.style.display = pending.length ? "inline" : "none";
+      }
+
+      const el = document.getElementById("pendingList");
+
+      if (!invites.length) {
+        el.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">📭</div>
+            <div class="empty-state-title">No Invitations</div>
+            <p>You have no pending club invitations right now.</p>
+          </div>`;
+        return;
+      }
+
+      el.innerHTML = invites.map(inv => {
+        const daysLeft = Math.ceil((new Date(inv.expires_at) - new Date()) / 86400000);
+        const expiryText = daysLeft > 0
+          ? `⏰ Expires in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`
+          : "⌛ Expires soon";
+
+        const actionBtns = inv.status === "pending" ? `
+          <div class="invite-actions">
+            <button class="btn btn-primary" onclick="respond(${inv.id}, 'accepted', this)">
+              ✅ Accept Invitation
+            </button>
+            <button class="btn btn-outline" onclick="respond(${inv.id}, 'declined', this)"
+              style="color:#dc2626;border-color:#fecaca;">
+              ✕ Decline
+            </button>
+          </div>` : `
+          <div>
+            <span class="invite-status-label label-${inv.status}">
+              ${{accepted:"✅ Accepted",declined:"✕ Declined",expired:"⌛ Expired"}[inv.status] || inv.status}
+            </span>
+          </div>`;
+
+        return `
+        <div class="invite-card ${inv.status !== "pending" ? inv.status : ""}" id="invite-${inv.id}">
+          <div class="invite-top">
+            <div class="club-logo">🏛️</div>
+            <div class="invite-detail">
+              <div class="invite-club-name">${escH(inv.club_name)}</div>
+              <div class="invite-from">Invited by ${escH(inv.invited_by_name)}</div>
+              ${inv.status === "pending" ? `<div class="invite-expiry">${expiryText}</div>` : ""}
+            </div>
+          </div>
+          ${inv.message ? `<div class="invite-message">"${escH(inv.message)}"</div>` : ""}
+          ${actionBtns}
+        </div>`;
+      }).join("");
+
+    } catch(e) {
+      document.getElementById("pendingList").innerHTML =
+        `<p style="color:#dc2626;">Failed to load invitations. Please refresh.</p>`;
+    }
+  }
+
+  async function respond(invId, action, btnEl) {
+    if (btnEl) btnEl.disabled = true;
+
+    try {
+      const res = await fetch("/club/invitations/respond", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ invitation_id: invId, action })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        const card = document.getElementById(`invite-${invId}`);
+        if (card) {
+          if (action === "accepted") {
+            card.classList.add("accepted");
+            card.querySelector(".invite-actions").innerHTML = `
+              <span class="invite-status-label label-accepted">✅ Accepted — Welcome to the club!</span>
+              <a href="/club/" class="btn btn-primary" style="margin-left:10px;">Go to Club Portal →</a>`;
+          } else {
+            card.classList.add("declined");
+            card.querySelector(".invite-actions").innerHTML =
+              `<span class="invite-status-label label-declined">✕ Declined</span>`;
+          }
+        }
+        // Update badge count
+        loadInvitations();
+      } else {
+        alert(data.message || "Something went wrong. Please try again.");
+        if (btnEl) btnEl.disabled = false;
+      }
+    } catch(e) {
+      alert("Network error. Please try again.");
+      if (btnEl) btnEl.disabled = false;
+    }
+  }
+
+  function escH(str) {
+    if (!str) return "";
+    return String(str)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+</script>
+</body>
+</html>

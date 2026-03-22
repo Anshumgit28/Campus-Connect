@@ -5,401 +5,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Faculty Dashboard | Campus Connect</title>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --ink:      #0d0d14;
-      --ink2:     #1a1a2e;
-      --surface:  #ffffff;
-      --bg:       #f4f3f0;
-      --border:   #e8e5df;
-      --muted:    #8a8a9a;
-      --accent:   #2d6a4f;
-      --accent2:  #52b788;
-      --amber:    #e8a020;
-      --red:      #d62839;
-      --blue:     #1d3461;
-      --r:        16px;
-    }
-
-    html, body { height: 100%; font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--ink); font-size: 15px; }
-
-    .app { display: flex; height: 100vh; overflow: hidden; }
-
-    /* SIDEBAR */
-    .sidebar {
-      width: 240px; min-width: 240px;
-      background: var(--ink2);
-      display: flex; flex-direction: column;
-      padding: 0;
-      overflow-y: auto;
-    }
-
-    .sidebar-brand {
-      padding: 28px 24px 24px;
-      border-bottom: 1px solid rgba(255,255,255,.07);
-    }
-
-    .brand-badge {
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 38px; height: 38px;
-      background: var(--accent2);
-      border-radius: 10px;
-      font-family: 'Syne', sans-serif;
-      font-weight: 800; font-size: 14px;
-      color: white; margin-bottom: 12px;
-    }
-
-    .brand-title {
-      font-family: 'Syne', sans-serif;
-      font-size: 13px; font-weight: 700;
-      color: white; letter-spacing: .5px;
-      text-transform: uppercase;
-    }
-
-    .brand-sub { font-size: 11px; color: rgba(255,255,255,.35); margin-top: 2px; }
-
-    .nav { flex: 1; padding: 16px 12px; display: flex; flex-direction: column; gap: 2px; }
-
-    .nav-section-label {
-      font-size: 10px; font-weight: 700; letter-spacing: 1px;
-      color: rgba(255,255,255,.25); text-transform: uppercase;
-      padding: 12px 12px 6px;
-    }
-
-    .nav-link {
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 12px; border-radius: 10px;
-      color: rgba(255,255,255,.5);
-      text-decoration: none; font-size: 13px; font-weight: 500;
-      transition: all .15s; cursor: pointer;
-    }
-
-    .nav-link:hover { background: rgba(255,255,255,.07); color: white; }
-    .nav-link.active { background: var(--accent); color: white; }
-
-    .nav-icon { font-size: 15px; width: 18px; text-align: center; }
-
-    .nav-badge {
-      margin-left: auto; background: var(--amber);
-      color: var(--ink); font-size: 10px; font-weight: 700;
-      padding: 1px 7px; border-radius: 20px; display: none;
-    }
-
-    .sidebar-footer {
-      padding: 16px 12px;
-      border-top: 1px solid rgba(255,255,255,.07);
-    }
-
-    .logout-link {
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 12px; border-radius: 10px;
-      color: rgba(255,255,255,.3);
-      text-decoration: none; font-size: 13px;
-      transition: all .15s;
-    }
-    .logout-link:hover { background: rgba(214,40,57,.15); color: #ff8fa3; }
-
-    /* MAIN */
-    .main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
-
-    .topbar {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 24px 36px 20px;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      position: sticky; top: 0; z-index: 10;
-    }
-
-    .topbar-left .label { font-size: 11px; color: var(--muted); font-weight: 600; letter-spacing: .5px; text-transform: uppercase; }
-    .topbar-left .title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; color: var(--ink); margin-top: 2px; }
-
-    .topbar-right { display: flex; align-items: center; gap: 12px; }
-
-    .avatar-wrap {
-      display: flex; align-items: center; gap: 10px;
-      padding: 8px 14px; border-radius: 40px;
-      background: var(--bg); border: 1px solid var(--border);
-      cursor: pointer;
-    }
-
-    .avatar {
-      width: 32px; height: 32px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      color: white; font-weight: 700; font-size: 13px;
-      display: flex; align-items: center; justify-content: center;
-    }
-
-    .avatar-name { font-size: 13px; font-weight: 600; color: var(--ink); }
-
-    /* PAGE CONTENT */
-    .page { padding: 32px 36px; display: none; flex-direction: column; gap: 24px; }
-    .page.active { display: flex; }
-
-    /* STATS GRID */
-    .stats-grid {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
-    }
-
-    .stat-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--r);
-      padding: 22px;
-      position: relative; overflow: hidden;
-      transition: transform .2s, box-shadow .2s;
-    }
-
-    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.08); }
-
-    .stat-card::after {
-      content: ""; position: absolute;
-      top: 0; left: 0; right: 0; height: 3px;
-      border-radius: var(--r) var(--r) 0 0;
-    }
-
-    .stat-card.green::after  { background: var(--accent2); }
-    .stat-card.amber::after  { background: var(--amber); }
-    .stat-card.blue::after   { background: var(--blue); }
-    .stat-card.red::after    { background: var(--red); }
-
-    .stat-icon { font-size: 28px; margin-bottom: 10px; display: block; }
-    .stat-label { font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
-    .stat-val { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 700; color: var(--ink); line-height: 1; }
-    .stat-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
-
-    /* CARDS */
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--r);
-      padding: 24px;
-    }
-
-    .card-header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 18px;
-    }
-
-    .card-title {
-      font-family: 'Syne', sans-serif;
-      font-size: 15px; font-weight: 700; color: var(--ink);
-    }
-
-    .card-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
-
-    /* GRID LAYOUTS */
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
-
-    /* BUTTONS */
-    .btn {
-      padding: 10px 18px; border-radius: 10px; border: none;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 13px; font-weight: 600;
-      cursor: pointer; transition: all .15s;
-      display: inline-flex; align-items: center; gap: 6px;
-    }
-
-    .btn-primary { background: var(--accent); color: white; }
-    .btn-primary:hover { background: #256045; transform: translateY(-1px); }
-    .btn-accent { background: var(--accent2); color: white; }
-    .btn-accent:hover { opacity: .88; }
-    .btn-amber { background: var(--amber); color: var(--ink); }
-    .btn-outline { background: white; border: 1px solid var(--border); color: var(--ink); }
-    .btn-outline:hover { background: var(--bg); }
-    .btn-danger { background: #fee2e2; color: var(--red); }
-    .btn-danger:hover { background: #fecaca; }
-    .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 8px; }
-
-    /* INPUTS */
-    .input-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
-    .input-group label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .3px; }
-
-    input, select, textarea {
-      font-family: 'DM Sans', sans-serif;
-      padding: 11px 14px;
-      border-radius: 10px;
-      border: 1.5px solid var(--border);
-      font-size: 14px; color: var(--ink);
-      background: var(--surface);
-      transition: border-color .15s, box-shadow .15s;
-      width: 100%;
-    }
-
-    input:focus, select:focus, textarea:focus {
-      outline: none;
-      border-color: var(--accent2);
-      box-shadow: 0 0 0 3px rgba(82,183,136,.15);
-    }
-
-    textarea { resize: vertical; min-height: 90px; }
-
-    /* TABLE */
-    .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); }
-
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-
-    thead { background: var(--ink2); color: white; position: sticky; top: 0; z-index: 2; }
-    thead th { padding: 13px 14px; text-align: left; font-weight: 600; font-size: 12px; letter-spacing: .3px; }
-
-    tbody td { padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-    tbody tr:last-child td { border-bottom: none; }
-    tbody tr:hover { background: #fafafa; }
-
-    /* BADGES */
-    .badge {
-      display: inline-flex; align-items: center;
-      padding: 3px 10px; border-radius: 20px;
-      font-size: 11px; font-weight: 700;
-    }
-
-    .badge-green  { background: #d1fae5; color: #065f46; }
-    .badge-amber  { background: #fef3c7; color: #92400e; }
-    .badge-red    { background: #fee2e2; color: #991b1b; }
-    .badge-blue   { background: #dbeafe; color: #1e40af; }
-    .badge-purple { background: #ede9fe; color: #5b21b6; }
-
-    /* PROGRESS BAR */
-    .progress-track { height: 8px; background: var(--bg); border-radius: 8px; overflow: hidden; }
-    .progress-fill { height: 100%; border-radius: 8px; transition: width .5s ease; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
-
-    /* TABS */
-    .tab-bar { display: flex; gap: 4px; background: var(--bg); padding: 4px; border-radius: 12px; width: fit-content; }
-
-    .tab-btn {
-      padding: 8px 16px; border-radius: 9px; border: none;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 13px; font-weight: 600;
-      cursor: pointer; transition: all .15s;
-      color: var(--muted); background: transparent;
-    }
-
-    .tab-btn.active { background: white; color: var(--ink); box-shadow: 0 2px 8px rgba(0,0,0,.08); }
-
-    /* EMPTY STATE */
-    .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
-    .empty-state .empty-icon { font-size: 40px; margin-bottom: 12px; opacity: .4; }
-    .empty-state p { font-size: 14px; }
-
-    /* MSG */
-    .msg { padding: 10px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; margin-top: 10px; display: none; }
-    .msg.success { background: #d1fae5; color: #065f46; display: block; }
-    .msg.error   { background: #fee2e2; color: #991b1b; display: block; }
-
-    /* NOTIFICATION ITEM */
-    .notif-item {
-      padding: 14px 16px; border-radius: 12px;
-      background: var(--bg); border: 1px solid var(--border);
-      margin-bottom: 10px;
-      display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
-    }
-
-    .notif-item .notif-text { font-size: 14px; color: var(--ink); flex: 1; }
-    .notif-item .notif-time { font-size: 11px; color: var(--muted); white-space: nowrap; }
-
-    /* ACTIVITY */
-    .activity-item {
-      display: flex; align-items: center; gap: 12px;
-      padding: 10px 0; border-bottom: 1px solid var(--border);
-      font-size: 13px;
-    }
-
-    .activity-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: var(--accent2); flex-shrink: 0;
-    }
-
-    /* RESOURCE CARD */
-    .resource-card {
-      display: flex; align-items: center; gap: 14px;
-      padding: 14px; border-radius: 12px;
-      background: var(--bg); border: 1px solid var(--border);
-      margin-bottom: 10px;
-    }
-
-    .resource-icon {
-      width: 40px; height: 40px; border-radius: 10px;
-      background: var(--accent); color: white;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px; flex-shrink: 0;
-    }
-
-    .resource-info { flex: 1; min-width: 0; }
-    .resource-title { font-size: 14px; font-weight: 600; color: var(--ink); }
-    .resource-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
-
-    /* ANIMATE */
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(12px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    .page.active { animation: fadeUp .2s ease; }
-
-    @media (max-width: 1100px) {
-      .stats-grid { grid-template-columns: repeat(2, 1fr); }
-      .grid-3 { grid-template-columns: 1fr 1fr; }
-    }
-
-    @media (max-width: 768px) {
-      .sidebar { display: none; }
-      .topbar, .page { padding: 16px 20px; }
-      .stats-grid, .grid-2, .grid-3 { grid-template-columns: 1fr; }
-    }
-  </style>
+  <link rel="stylesheet" href="/dashboards/faculty/css/faculty-dashboard.css">
 </head>
 <body>
 <div class="app">
 
-  <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="sidebar-brand">
       <div class="brand-badge">F</div>
       <div class="brand-title">Campus Connect</div>
       <div class="brand-sub">Faculty Portal</div>
     </div>
-
     <nav class="nav">
       <div class="nav-section-label">Main</div>
-      <a class="nav-link active" onclick="showPage('dashboard')">
-        <span class="nav-icon">⬛</span> Dashboard
-      </a>
-      <a class="nav-link" onclick="showPage('students')">
-        <span class="nav-icon">👨‍🎓</span> Students
-      </a>
-      <a class="nav-link" onclick="showPage('academics')">
-        <span class="nav-icon">📚</span> Academics
-      </a>
-
+      <a class="nav-link active" onclick="showPage('dashboard')"><span class="nav-icon">⬛</span> Dashboard</a>
+      <a class="nav-link" onclick="showPage('students')"><span class="nav-icon">👨‍🎓</span> Students</a>
+      <a class="nav-link" onclick="showPage('academics')"><span class="nav-icon">📚</span> Academics</a>
       <div class="nav-section-label" style="margin-top:8px;">Tools</div>
-      <a class="nav-link" onclick="showPage('attendance')">
-        <span class="nav-icon">✅</span> Attendance
-        <span class="nav-badge" id="pendingBadge">0</span>
-      </a>
-      <a class="nav-link" onclick="showPage('grades')">
-        <span class="nav-icon">🎓</span> Grades
-      </a>
-      <a class="nav-link" onclick="showPage('resources')">
-        <span class="nav-icon">📂</span> Resources
-      </a>
-      <a class="nav-link" onclick="showPage('notify')">
-        <span class="nav-icon">📣</span> Notify Students
-      </a>
+      <a class="nav-link" onclick="showPage('attendance')"><span class="nav-icon">✅</span> Attendance<span class="nav-badge" id="pendingBadge">0</span></a>
+      <a class="nav-link" href="/faculty/courses"><span class="nav-icon">🎓</span> My Courses</a>
+      <a class="nav-link" onclick="showPage('resources')"><span class="nav-icon">📂</span> Resources</a>
+      <a class="nav-link" onclick="showPage('notify')"><span class="nav-icon">📣</span> Notify Students</a>
     </nav>
-
     <div class="sidebar-footer">
-      <a href="/logout" class="logout-link">
-        <span>🚪</span> Logout
-      </a>
+      <a href="/logout" class="logout-link"><span>🚪</span> Logout</a>
     </div>
   </aside>
 
-  <!-- MAIN -->
   <main class="main">
-
-    <!-- TOPBAR -->
     <header class="topbar">
       <div class="topbar-left">
         <div class="label">Faculty Portal</div>
@@ -413,128 +46,68 @@
       </div>
     </header>
 
-    <!-- ═══════════════ DASHBOARD PAGE ═══════════════ -->
+    <!-- ═══════════════ DASHBOARD ═══════════════ -->
     <div class="page active" id="page-dashboard">
-
       <div class="stats-grid">
-        <div class="stat-card green">
-          <span class="stat-icon">👨‍🎓</span>
-          <div class="stat-label">Total Students</div>
-          <div class="stat-val" id="totalStudents">0</div>
-          <div class="stat-sub">Enrolled students</div>
-        </div>
-        <div class="stat-card amber">
-          <span class="stat-icon">📝</span>
-          <div class="stat-label">Assignments</div>
-          <div class="stat-val" id="totalAssignments">0</div>
-          <div class="stat-sub">Active assignments</div>
-        </div>
-        <div class="stat-card blue">
-          <span class="stat-icon">🧪</span>
-          <div class="stat-label">Exams</div>
-          <div class="stat-val" id="totalExams">0</div>
-          <div class="stat-sub">Scheduled exams</div>
-        </div>
-        <div class="stat-card red">
-          <span class="stat-icon">📊</span>
-          <div class="stat-label">Grades Entered</div>
-          <div class="stat-val" id="totalGrades">0</div>
-          <div class="stat-sub">Total grade records</div>
-        </div>
+        <div class="stat-card green"><span class="stat-icon">👨‍🎓</span><div class="stat-label">Total Students</div><div class="stat-val" id="totalStudents">0</div><div class="stat-sub">Enrolled students</div></div>
+        <div class="stat-card amber"><span class="stat-icon">📝</span><div class="stat-label">Assignments</div><div class="stat-val" id="totalAssignments">0</div><div class="stat-sub">Active assignments</div></div>
+        <div class="stat-card blue"><span class="stat-icon">🧪</span><div class="stat-label">Exams</div><div class="stat-val" id="totalExams">0</div><div class="stat-sub">Scheduled exams</div></div>
+        <div class="stat-card green"><span class="stat-icon">📚</span><div class="stat-label">My Courses</div><div class="stat-val" id="totalCourses">0</div><div class="stat-sub">Active courses</div></div>
       </div>
 
       <div class="grid-2">
-
-        <!-- Attendance Overview -->
         <div class="card">
-          <div class="card-header">
-            <div>
-              <div class="card-title">📊 Attendance Overview</div>
-              <div class="card-sub">Campus-wide average</div>
-            </div>
-          </div>
-          <div style="font-family:'Syne',sans-serif; font-size:48px; font-weight:800; color:var(--accent); line-height:1; margin-bottom:10px;" id="avgAttendanceBig">0%</div>
-          <div class="progress-track">
-            <div class="progress-fill" id="attendanceBar" style="width:0%"></div>
-          </div>
-          <div style="font-size:12px; color:var(--muted); margin-top:8px;" id="attendanceNote"></div>
+          <div class="card-header"><div><div class="card-title">📊 Attendance Overview</div><div class="card-sub">Campus-wide average</div></div></div>
+          <div style="font-family:'Syne',sans-serif;font-size:48px;font-weight:800;color:var(--accent);line-height:1;margin-bottom:10px;" id="avgAttendanceBig">0%</div>
+          <div class="progress-track"><div class="progress-fill" id="attendanceBar" style="width:0%"></div></div>
+          <div style="font-size:12px;color:var(--muted);margin-top:8px;" id="attendanceNote"></div>
         </div>
-
-        <!-- Grade Distribution -->
         <div class="card">
-          <div class="card-header">
-            <div class="card-title">📈 Grade Distribution</div>
-          </div>
-          <div id="gradeDistribution" style="display:flex; gap:10px; flex-wrap:wrap;"></div>
-        </div>
-
-      </div>
-
-      <div class="grid-2">
-
-        <!-- Recent Activity -->
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">🕐 Recent Activity</div>
-          </div>
-          <div id="activityList">
-            <div class="empty-state"><div class="empty-icon">📋</div><p>No activity yet</p></div>
-          </div>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">⚡ Quick Actions</div>
-          </div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div class="card-header"><div class="card-title">⚡ Quick Actions</div></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
             <button class="btn btn-primary" onclick="showPage('attendance')">✅ Mark Attendance</button>
-            <button class="btn btn-accent" onclick="showPage('grades')">🎓 Enter Grade</button>
-            <button class="btn btn-amber" onclick="showPage('academics')">📝 Add Assignment</button>
+            <button class="btn btn-amber"   onclick="showPage('academics')">📝 Add Assignment</button>
             <button class="btn btn-outline" onclick="showPage('notify')">📣 Notify Students</button>
             <button class="btn btn-outline" onclick="showPage('resources')">📂 Upload Resource</button>
-            <button class="btn btn-outline" onclick="location.href='/faculty/attendance'">🎓 Manage Courses</button>
+            <button class="btn btn-outline" onclick="location.href='/faculty/courses'">🎓 My Courses</button>
             <button class="btn btn-outline" onclick="showPage('students')">👨‍🎓 View Students</button>
           </div>
         </div>
+      </div>
 
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><div class="card-title">🕐 Recent Activity</div></div>
+          <div id="activityList"><div class="empty-state"><div class="empty-icon">📋</div><p>No activity yet</p></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">📈 Grade Distribution</div></div>
+          <div id="gradeDistribution" style="display:flex;gap:10px;flex-wrap:wrap;"></div>
+        </div>
       </div>
     </div>
 
-    <!-- ═══════════════ STUDENTS PAGE ═══════════════ -->
+    <!-- ═══════════════ STUDENTS ═══════════════ -->
     <div class="page" id="page-students">
       <div class="card">
         <div class="card-header">
-          <div>
-            <div class="card-title">👨‍🎓 All Students</div>
-            <div class="card-sub" id="studentCountLabel">Loading...</div>
-          </div>
-          <div style="display:flex; gap:8px;">
+          <div><div class="card-title">👨‍🎓 All Students</div><div class="card-sub" id="studentCountLabel">Loading...</div></div>
+          <div style="display:flex;gap:8px;">
             <input id="searchStudent" placeholder="🔍 Search name, PRN, class..." style="width:260px;" oninput="filterStudents()">
-            <select id="classFilter" style="width:130px;" onchange="filterStudents()">
-              <option value="">All Classes</option>
-            </select>
+            <select id="classFilter" style="width:130px;" onchange="filterStudents()"><option value="">All Classes</option></select>
           </div>
         </div>
         <div class="table-wrap">
           <table>
-            <thead>
-              <tr>
-                <th>#</th><th>Student</th><th>Email</th><th>PRN</th>
-                <th>Class</th><th>Year</th><th>GPA</th><th>Attendance</th>
-              </tr>
-            </thead>
-            <tbody id="studentTableBody">
-              <tr><td colspan="8" style="padding:40px;text-align:center;color:var(--muted);">Loading students...</td></tr>
-            </tbody>
+            <thead><tr><th>#</th><th>Student</th><th>Email</th><th>PRN</th><th>Class</th><th>Year</th><th>GPA</th><th>Attendance</th></tr></thead>
+            <tbody id="studentTableBody"><tr><td colspan="8" style="padding:40px;text-align:center;color:var(--muted);">Loading students...</td></tr></tbody>
           </table>
         </div>
       </div>
     </div>
 
-    <!-- ═══════════════ ACADEMICS PAGE ═══════════════ -->
+    <!-- ═══════════════ ACADEMICS ═══════════════ -->
     <div class="page" id="page-academics">
-
       <div class="tab-bar">
         <button class="tab-btn active" onclick="showAcadTab('assignments', this)">📝 Assignments</button>
         <button class="tab-btn" onclick="showAcadTab('exams', this)">🧪 Exams</button>
@@ -547,6 +120,13 @@
           <div class="card-header"><div class="card-title">➕ Add Assignment</div></div>
           <div class="input-group"><label>Title *</label><input id="aTitle" placeholder="e.g. Unit 3 Assignment"></div>
           <div class="input-group"><label>Subject *</label><input id="aSubject" placeholder="e.g. Data Structures"></div>
+          <div class="input-group">
+            <label>Course
+              <span style="color:#9ca3af;font-weight:400;text-transform:none;letter-spacing:0;"> — enrolled students will see this</span>
+            </label>
+            <select id="aCourseSel"><option value="">Loading courses...</option></select>
+            <span id="aCourseNote" style="font-size:12px;color:var(--muted);margin-top:4px;display:block;"></span>
+          </div>
           <div class="input-group"><label>Description</label><textarea id="aDesc" placeholder="Optional details..."></textarea></div>
           <div class="input-group"><label>Due Date *</label><input type="date" id="aDueDate"></div>
           <button class="btn btn-primary" onclick="addAssignment()" style="width:100%;">➕ Add Assignment</button>
@@ -558,7 +138,13 @@
             <div class="card-title">📋 My Assignments</div>
             <span id="assignmentCountBadge" class="badge badge-blue">0</span>
           </div>
-          <div id="assignmentList" style="max-height:450px; overflow-y:auto;">
+          <div style="margin-bottom:14px;">
+            <select id="assignCourseFilter" onchange="loadAssignments()"
+              style="width:100%;padding:9px 12px;border-radius:8px;border:1.5px solid var(--border);font-size:13px;">
+              <option value="">All Courses</option>
+            </select>
+          </div>
+          <div id="assignmentList" style="max-height:500px;overflow-y:auto;">
             <div class="empty-state"><div class="empty-icon">📝</div><p>No assignments yet</p></div>
           </div>
         </div>
@@ -572,88 +158,72 @@
           <div class="input-group"><label>Exam Date *</label><input type="date" id="eDate"></div>
           <div class="input-group"><label>Exam Type</label>
             <select id="eType">
-              <option value="Regular">Regular</option>
-              <option value="Mid-Term">Mid-Term</option>
-              <option value="End-Term">End-Term</option>
-              <option value="Practical">Practical</option>
-              <option value="Viva">Viva</option>
+              <option>Regular</option><option>Mid-Term</option><option>End-Term</option><option>Practical</option><option>Viva</option>
             </select>
           </div>
           <button class="btn btn-primary" onclick="addExam()" style="width:100%;">🧪 Schedule Exam</button>
           <div id="eMsg" class="msg"></div>
         </div>
-
         <div class="card">
-          <div class="card-header">
-            <div class="card-title">🗓️ Scheduled Exams</div>
-            <span id="examCountBadge" class="badge badge-amber">0</span>
-          </div>
-          <div id="examList" style="max-height:450px; overflow-y:auto;">
-            <div class="empty-state"><div class="empty-icon">🧪</div><p>No exams scheduled</p></div>
-          </div>
+          <div class="card-header"><div class="card-title">🗓️ Scheduled Exams</div><span id="examCountBadge" class="badge badge-amber">0</span></div>
+          <div id="examList" style="max-height:450px;overflow-y:auto;"><div class="empty-state"><div class="empty-icon">🧪</div><p>No exams scheduled</p></div></div>
         </div>
       </div>
+
       <!-- COURSES TAB -->
       <div id="acad-courses" style="display:none;" class="grid-2">
-
-        <!-- CREATE COURSE -->
         <div class="card">
           <div class="card-header"><div class="card-title">➕ Add New Course</div></div>
-          <div class="input-group"><label>Course Name *</label>
-            <input id="cName" placeholder="e.g. Data Structures">
-          </div>
+          <div class="input-group"><label>Course Name *</label><input id="cName" placeholder="e.g. Data Structures"></div>
           <div class="grid-2" style="gap:12px;">
-            <div class="input-group"><label>Course Code</label>
-              <input id="cCode" placeholder="e.g. CS301">
-            </div>
+            <div class="input-group"><label>Course Code</label><input id="cCode" placeholder="e.g. CS301"></div>
             <div class="input-group"><label>Semester</label>
               <select id="cSem">
                 <option value="">—</option>
-                <option value="1">Sem 1</option><option value="2">Sem 2</option>
-                <option value="3">Sem 3</option><option value="4">Sem 4</option>
-                <option value="5">Sem 5</option><option value="6">Sem 6</option>
+                <option value="1">Sem 1</option><option value="2">Sem 2</option><option value="3">Sem 3</option>
+                <option value="4">Sem 4</option><option value="5">Sem 5</option><option value="6">Sem 6</option>
                 <option value="7">Sem 7</option><option value="8">Sem 8</option>
               </select>
             </div>
           </div>
-          <div class="input-group"><label>Description (optional)</label>
-            <textarea id="cDesc" placeholder="Brief course description..."></textarea>
+          <div class="input-group">
+            <label>Total Lecture Sessions *</label>
+            <input type="number" id="cTotalSessions" placeholder="e.g. 48" min="1">
           </div>
+          <div class="input-group">
+            <label>Total Lab Sessions</label>
+            <input type="number" id="cTotalLabSessions" placeholder="e.g. 24" min="0" value="0">
+          </div>
+          <div class="input-group"><label>Description (optional)</label><textarea id="cDesc" placeholder="Brief course description..."></textarea></div>
           <button class="btn btn-primary" onclick="createCourse()" style="width:100%;">➕ Create Course</button>
           <div id="courseMsg" class="msg"></div>
         </div>
-
-      <!-- MY COURSES LIST -->
         <div class="card">
           <div class="card-header">
             <div class="card-title">📚 My Courses</div>
-            <button class="btn btn-outline btn-sm" onclick="loadMyCourses()">🔄 Refresh</button>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-outline btn-sm" onclick="loadMyCourses()">🔄 Refresh</button>
+              <a href="/faculty/courses" class="btn btn-primary btn-sm">🎓 Full Course Portal →</a>
+            </div>
           </div>
-          <div id="myCoursesList">
-            <div class="empty-state"><div class="empty-icon">📚</div><p>No courses yet. Create one!</p></div>
-          </div>
+          <div id="myCoursesList"><div class="empty-state"><div class="empty-icon">📚</div><p>No courses yet.</p></div></div>
         </div>
-
       </div>
     </div>
 
-    <!-- ═══════════════ ATTENDANCE PAGE ═══════════════ -->
+    <!-- ═══════════════ ATTENDANCE ═══════════════ -->
     <div class="page" id="page-attendance">
-
       <div class="tab-bar">
         <button class="tab-btn active" onclick="showAttTab('single', this)">Single Entry</button>
         <button class="tab-btn" onclick="showAttTab('bulk', this)">Bulk Upload</button>
         <button class="tab-btn" onclick="showAttTab('view', this)">View Records</button>
       </div>
 
-      <!-- SINGLE ENTRY -->
       <div id="att-single" class="grid-2">
         <div class="card">
           <div class="card-header"><div class="card-title">✅ Mark Attendance</div></div>
-          <div class="input-group"><label>Student *</label>
-            <select id="attStudent"><option value="">Select Student</option></select>
-          </div>
-          <div class="input-group"><label>Subject *</label><input id="attSubject" placeholder="e.g. DBMS"></div>
+          <div class="input-group"><label>Student *</label><select id="attStudent"><option value="">Select Student</option></select></div>
+          <div class="input-group"><label>Subject / Course *</label><input id="attSubject" placeholder="e.g. DBMS"></div>
           <div class="grid-2" style="gap:12px;">
             <div class="input-group"><label>Classes Attended *</label><input type="number" id="attAttended" placeholder="e.g. 18" min="0"></div>
             <div class="input-group"><label>Total Classes *</label><input type="number" id="attTotal" placeholder="e.g. 24" min="1"></div>
@@ -662,218 +232,113 @@
           <button class="btn btn-primary" onclick="updateAttendance()" style="width:100%;">✅ Save Attendance</button>
           <div id="attMsg" class="msg"></div>
         </div>
-
         <div class="card">
-          <div class="card-header"><div class="card-title">ℹ️ Attendance Tips</div></div>
-          <div style="display:flex; flex-direction:column; gap:12px;">
-            <div style="padding:14px; border-radius:12px; background:#d1fae5; border:1px solid #a7f3d0;">
-              <div style="font-weight:700; font-size:13px; color:#065f46;">✅ Good Standing</div>
-              <div style="font-size:12px; color:#047857; margin-top:4px;">75% and above attendance</div>
-            </div>
-            <div style="padding:14px; border-radius:12px; background:#fef3c7; border:1px solid #fde68a;">
-              <div style="font-weight:700; font-size:13px; color:#92400e;">⚠️ Warning Zone</div>
-              <div style="font-size:12px; color:#b45309; margin-top:4px;">60%–74% attendance</div>
-            </div>
-            <div style="padding:14px; border-radius:12px; background:#fee2e2; border:1px solid #fecaca;">
-              <div style="font-weight:700; font-size:13px; color:#991b1b;">❌ Critical</div>
-              <div style="font-size:12px; color:#b91c1c; margin-top:4px;">Below 60% attendance</div>
-            </div>
+          <div class="card-header"><div class="card-title">ℹ️ Attendance Guide</div></div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="padding:14px;border-radius:12px;background:#d1fae5;border:1px solid #a7f3d0;"><div style="font-weight:700;font-size:13px;color:#065f46;">✅ Good — 75% and above</div></div>
+            <div style="padding:14px;border-radius:12px;background:#fef3c7;border:1px solid #fde68a;"><div style="font-weight:700;font-size:13px;color:#92400e;">⚠️ Warning — 60% to 74%</div></div>
+            <div style="padding:14px;border-radius:12px;background:#fee2e2;border:1px solid #fecaca;"><div style="font-weight:700;font-size:13px;color:#991b1b;">❌ Critical — below 60%</div></div>
+            <p style="font-size:12px;color:var(--muted);">For full session-based attendance, use the <a href="/faculty/attendance" style="color:var(--accent2);font-weight:600;">Attendance Portal →</a></p>
           </div>
         </div>
       </div>
 
-      <!-- BULK UPLOAD -->
       <div id="att-bulk" style="display:none;" class="grid-2">
         <div class="card">
-          <div class="card-header"><div class="card-title">📥 Bulk Attendance Upload</div></div>
+          <div class="card-header"><div class="card-title">📥 Bulk Attendance</div></div>
           <div class="input-group"><label>Subject *</label><input id="bulkSubject" placeholder="Subject name"></div>
           <div class="input-group"><label>Date *</label><input type="date" id="bulkDate"></div>
-          <div style="padding:16px; border-radius:12px; background:var(--bg); border:2px dashed var(--border); text-align:center; margin-bottom:14px;">
-            <div style="font-size:32px; margin-bottom:8px;">📄</div>
-            <div style="font-size:13px; color:var(--muted); margin-bottom:10px;">Paste CSV data below<br><small>Format: PRN, attended, total</small></div>
-            <textarea id="bulkCSV" placeholder="PRN123, 18, 24&#10;PRN456, 20, 24&#10;PRN789, 15, 24" style="width:100%; height:120px; font-family:monospace; font-size:12px;"></textarea>
+          <div style="padding:16px;border-radius:12px;background:var(--bg);border:2px dashed var(--border);text-align:center;margin-bottom:14px;">
+            <div style="font-size:32px;margin-bottom:8px;">📄</div>
+            <div style="font-size:13px;color:var(--muted);margin-bottom:10px;">Paste CSV: PRN, attended, total</div>
+            <textarea id="bulkCSV" placeholder="PRN123, 18, 24&#10;PRN456, 20, 24" style="width:100%;height:120px;font-family:monospace;font-size:12px;"></textarea>
           </div>
-          <button class="btn btn-primary" onclick="processBulkAttendance()" style="width:100%;">📥 Process Bulk Attendance</button>
+          <button class="btn btn-primary" onclick="processBulkAttendance()" style="width:100%;">📥 Process</button>
           <div id="bulkMsg" class="msg"></div>
         </div>
-
         <div class="card">
-          <div class="card-header"><div class="card-title">📊 Bulk Results</div></div>
-          <div id="bulkResults">
-            <div class="empty-state"><div class="empty-icon">📋</div><p>Upload data to see results</p></div>
-          </div>
+          <div class="card-header"><div class="card-title">📊 Results</div></div>
+          <div id="bulkResults"><div class="empty-state"><div class="empty-icon">📋</div><p>Upload to see results</p></div></div>
         </div>
       </div>
 
-      <!-- VIEW RECORDS -->
       <div id="att-view" style="display:none;">
         <div class="card">
-          <div class="card-header">
-            <div class="card-title">📊 Attendance Records</div>
-            <button class="btn btn-outline btn-sm" onclick="loadAttendanceRecords()">🔄 Refresh</button>
-          </div>
+          <div class="card-header"><div class="card-title">📊 Attendance Records</div><button class="btn btn-outline btn-sm" onclick="loadAttendanceRecords()">🔄 Refresh</button></div>
           <div class="table-wrap">
             <table>
-              <thead>
-                <tr><th>Student</th><th>Subject</th><th>Attended</th><th>Total</th><th>%</th><th>Status</th><th>Date</th></tr>
-              </thead>
-              <tbody id="attendanceTableBody">
-                <tr><td colspan="7" style="padding:30px; text-align:center; color:var(--muted);">Click Refresh to load records</td></tr>
-              </tbody>
+              <thead><tr><th>Student</th><th>Subject</th><th>Attended</th><th>Total</th><th>%</th><th>Status</th><th>Date</th></tr></thead>
+              <tbody id="attendanceTableBody"><tr><td colspan="7" style="padding:30px;text-align:center;color:var(--muted);">Click Refresh to load</td></tr></tbody>
             </table>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ═══════════════ GRADES PAGE ═══════════════ -->
-    <div class="page" id="page-grades">
-      <div class="grid-2">
-
-        <div class="card">
-          <div class="card-header"><div class="card-title">🎓 Enter Grade</div></div>
-          <div class="input-group"><label>Student *</label>
-            <select id="gradeStudent"><option value="">Select Student</option></select>
-          </div>
-          <div class="input-group"><label>Subject *</label><input id="gradeSubject" placeholder="e.g. Computer Networks"></div>
-          <div class="input-group"><label>Grade *</label>
-            <select id="gradeValue">
-              <option value="">Select Grade</option>
-              <option value="A">A — Excellent (GPA 4.0)</option>
-              <option value="B">B — Good (GPA 3.0)</option>
-              <option value="C">C — Average (GPA 2.0)</option>
-              <option value="D">D — Below Average (GPA 1.0)</option>
-              <option value="F">F — Fail (GPA 0.0)</option>
-            </select>
-          </div>
-          <button class="btn btn-primary" onclick="enterGrade()" style="width:100%;">💾 Save Grade</button>
-          <div id="gradeMsg" class="msg"></div>
-        </div>
-
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">📊 Grade Distribution</div>
-          </div>
-          <div id="gradeDistFull" style="display:flex; flex-wrap:wrap; gap:12px;"></div>
-          <div style="margin-top:20px;">
-            <div class="card-title" style="margin-bottom:14px;">📋 Recent Grades</div>
-            <div id="recentGradesList"></div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- ═══════════════ RESOURCES PAGE ═══════════════ -->
+    <!-- ═══════════════ RESOURCES ═══════════════ -->
     <div class="page" id="page-resources">
       <div class="grid-2">
-
         <div class="card">
           <div class="card-header"><div class="card-title">📂 Upload Resource</div></div>
           <div class="input-group"><label>Title *</label><input id="resTitle" placeholder="e.g. Unit 4 Notes - DBMS"></div>
           <div class="input-group"><label>Subject</label><input id="resSubject" placeholder="e.g. Database Management"></div>
           <div class="grid-2" style="gap:12px;">
             <div class="input-group"><label>Semester</label>
-              <select id="resSemester">
-                <option value="">All</option>
-                <option value="1">Sem 1</option><option value="2">Sem 2</option>
-                <option value="3">Sem 3</option><option value="4">Sem 4</option>
-                <option value="5">Sem 5</option><option value="6">Sem 6</option>
-                <option value="7">Sem 7</option><option value="8">Sem 8</option>
-              </select>
+              <select id="resSemester"><option value="">All</option><option value="1">Sem 1</option><option value="2">Sem 2</option><option value="3">Sem 3</option><option value="4">Sem 4</option><option value="5">Sem 5</option><option value="6">Sem 6</option><option value="7">Sem 7</option><option value="8">Sem 8</option></select>
             </div>
             <div class="input-group"><label>Type</label>
-              <select id="resType">
-                <option value="Notes">Notes</option>
-                <option value="PPT">PPT</option>
-                <option value="PDF">PDF</option>
-                <option value="Assignment">Assignment</option>
-              </select>
+              <select id="resType"><option>Notes</option><option>PPT</option><option>PDF</option><option>Assignment</option></select>
             </div>
           </div>
-          <div class="input-group"><label>File * (PDF, PPT, DOC — max 20MB)</label>
-            <input type="file" id="resFile" accept=".pdf,.ppt,.pptx,.doc,.docx">
-          </div>
-          <button class="btn btn-primary" onclick="uploadResource()" style="width:100%;">📤 Upload Resource</button>
+          <div class="input-group"><label>File * (max 20MB)</label><input type="file" id="resFile" accept=".pdf,.ppt,.pptx,.doc,.docx"></div>
+          <button class="btn btn-primary" onclick="uploadResource()" style="width:100%;">📤 Upload</button>
           <div id="resMsg" class="msg"></div>
-          <div id="uploadProgress" style="display:none; margin-top:10px;">
-            <div style="font-size:12px; color:var(--muted); margin-bottom:6px;">Uploading...</div>
+          <div id="uploadProgress" style="display:none;margin-top:10px;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Uploading...</div>
             <div class="progress-track"><div class="progress-fill" id="uploadBar" style="width:0%"></div></div>
           </div>
         </div>
-
         <div class="card">
-          <div class="card-header">
-            <div class="card-title">📚 Uploaded Resources</div>
-            <button class="btn btn-outline btn-sm" onclick="loadMyResources()">🔄 Refresh</button>
-          </div>
-          <div id="resourcesList">
-            <div class="empty-state"><div class="empty-icon">📂</div><p>No resources uploaded yet</p></div>
-          </div>
+          <div class="card-header"><div class="card-title">📚 Uploaded Resources</div><button class="btn btn-outline btn-sm" onclick="loadMyResources()">🔄 Refresh</button></div>
+          <div id="resourcesList"><div class="empty-state"><div class="empty-icon">📂</div><p>No resources uploaded yet</p></div></div>
         </div>
-
       </div>
     </div>
 
-    <!-- ═══════════════ NOTIFY PAGE ═══════════════ -->
+    <!-- ═══════════════ NOTIFY ═══════════════ -->
     <div class="page" id="page-notify">
       <div class="grid-2">
-
         <div class="card">
           <div class="card-header"><div class="card-title">📣 Send Notification</div></div>
-          <div class="input-group"><label>Target Audience *</label>
-            <select id="notifyTarget">
-              <option value="student">All Students</option>
-              <option value="alumni">All Alumni</option>
-              <option value="faculty">All Faculty</option>
-            </select>
+          <div class="input-group"><label>Target *</label>
+            <select id="notifyTarget"><option value="student">All Students</option><option value="alumni">All Alumni</option><option value="faculty">All Faculty</option></select>
           </div>
-          <div class="input-group"><label>Notification Type</label>
-            <select id="notifyType">
-              <option value="general">📢 General Announcement</option>
-              <option value="assignment">📝 Assignment Reminder</option>
-              <option value="exam">🧪 Exam Alert</option>
-              <option value="attendance">✅ Attendance Warning</option>
-              <option value="result">🎓 Result Announcement</option>
-            </select>
+          <div class="input-group"><label>Type</label>
+            <select id="notifyType"><option value="general">📢 General</option><option value="assignment">📝 Assignment</option><option value="exam">🧪 Exam Alert</option><option value="attendance">✅ Attendance</option><option value="result">🎓 Results</option></select>
           </div>
-          <div class="input-group"><label>Message *</label>
-            <textarea id="notifyMessage" placeholder="Write your notification message here..." style="min-height:120px;"></textarea>
-          </div>
-          <div style="display:flex; gap:8px; align-items:center; margin-bottom:14px;">
-            <span style="font-size:12px; color:var(--muted);" id="charCount">0 / 500 characters</span>
-          </div>
-          <button class="btn btn-primary" onclick="sendNotification()" style="width:100%;">📣 Send Notification</button>
+          <div class="input-group"><label>Message *</label><textarea id="notifyMessage" placeholder="Write your message..." style="min-height:120px;"></textarea></div>
+          <div style="margin-bottom:14px;"><span style="font-size:12px;color:var(--muted);" id="charCount">0 / 500 characters</span></div>
+          <button class="btn btn-primary" onclick="sendNotification()" style="width:100%;">📣 Send</button>
           <div id="notifyMsg" class="msg"></div>
         </div>
-
         <div class="card">
-          <div class="card-header">
-            <div class="card-title">📋 Sent Notifications</div>
-            <button class="btn btn-outline btn-sm" onclick="loadSentNotifications()">🔄 Refresh</button>
-          </div>
-
-          <div style="margin-bottom:14px; padding:14px; border-radius:12px; background:var(--bg); border:1px solid var(--border);">
-            <div style="font-size:12px; color:var(--muted); margin-bottom:8px; font-weight:600; text-transform:uppercase; letter-spacing:.3px;">Quick Templates</div>
-            <div style="display:flex; flex-wrap:wrap; gap:6px;">
-              <button class="btn btn-outline btn-sm" onclick="setTemplate('exam')">🧪 Exam Reminder</button>
-              <button class="btn btn-outline btn-sm" onclick="setTemplate('assignment')">📝 Assignment Due</button>
-              <button class="btn btn-outline btn-sm" onclick="setTemplate('attendance')">✅ Low Attendance</button>
-              <button class="btn btn-outline btn-sm" onclick="setTemplate('result')">🎓 Results Out</button>
+          <div class="card-header"><div class="card-title">📋 Sent Notifications</div><button class="btn btn-outline btn-sm" onclick="loadSentNotifications()">🔄 Refresh</button></div>
+          <div style="margin-bottom:14px;padding:14px;border-radius:12px;background:var(--bg);border:1px solid var(--border);">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;">Quick Templates</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+              <button class="btn btn-outline btn-sm" onclick="setTemplate('exam')">🧪 Exam</button>
+              <button class="btn btn-outline btn-sm" onclick="setTemplate('assignment')">📝 Assignment</button>
+              <button class="btn btn-outline btn-sm" onclick="setTemplate('attendance')">✅ Attendance</button>
+              <button class="btn btn-outline btn-sm" onclick="setTemplate('result')">🎓 Results</button>
             </div>
           </div>
-
-          <div id="sentNotificationsList">
-            <div class="empty-state"><div class="empty-icon">📣</div><p>No notifications sent yet</p></div>
-          </div>
+          <div id="sentNotificationsList"><div class="empty-state"><div class="empty-icon">📣</div><p>No notifications sent yet</p></div></div>
         </div>
-
       </div>
     </div>
 
   </main>
 </div>
-
 <script src="/dashboards/faculty/js/faculty-dashboard-new.js"></script>
 </body>
 </html>

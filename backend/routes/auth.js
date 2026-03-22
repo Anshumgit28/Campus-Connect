@@ -67,6 +67,8 @@ router.post("/login", loginLimiter, async (req, res) => {
     if (!match)
       return res.status(401).send("Invalid email or password");
 
+    req.session.userId = user.id;      // ← ADD THIS
+    req.session.role   = user.role;
     req.session.user = {
       id:       user.id,
       email:    user.email,

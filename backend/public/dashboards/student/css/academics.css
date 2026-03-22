@@ -1,85 +1,40 @@
-/* ============================================
-   ACADEMICS PAGE — academics.css
-============================================ */
+.acad-wrap{padding:24px 36px;}
+.tab-bar{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
+.tab{padding:9px 18px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s,color .15s,border-color .15s;}
+.tab:hover{background:#eef2ff;color:var(--indigo);border-color:#c7d2fe;}
+.tab.active{background:var(--indigo);color:white;border-color:var(--indigo);}
+.tab-panel{animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.attend-track{height:8px;background:var(--light);border-radius:8px;overflow:hidden;margin-bottom:10px;}
+.attend-fill{height:100%;background:linear-gradient(90deg,var(--indigo),var(--violet));border-radius:8px;transition:width .6s ease;}
+.attend-note{font-size:13px;color:var(--muted);}
+.overall-att-section{padding:16px;background:var(--light);border-radius:12px;margin-bottom:16px;}
 
-.acad-wrap {
-  padding: 24px 36px;
-}
+/* Per-course attendance cards */
+.course-att-card{background:var(--light);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:12px;transition:box-shadow .2s;}
+.course-att-card:hover{box-shadow:0 4px 14px rgba(0,0,0,.07);}
+.course-att-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px;flex-wrap:wrap;}
+.course-att-name{font-weight:700;font-size:15px;}
+.course-att-meta{font-size:12px;color:var(--muted);margin-top:3px;}
+.course-att-pct{font-family:'DM Serif Display',serif;font-size:24px;font-weight:400;line-height:1;}
+.att-pct-good{color:#16a34a;}
+.att-pct-warn{color:#d97706;}
+.att-pct-crit{color:#dc2626;}
+.att-status-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;margin-top:4px;}
+.att-badge-good{background:#d1fae5;color:#065f46;}
+.att-badge-warn{background:#fef3c7;color:#92400e;}
+.att-badge-crit{background:#fee2e2;color:#991b1b;}
+.att-type-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;}
+.att-type-chip{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;}
+.att-chip-lec{background:#eef2ff;color:#3730a3;}
+.att-chip-lab{background:#ede9fe;color:#5b21b6;}
 
-/* ── TAB BAR ── */
-.tab-bar {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-}
+.no-courses-msg{text-align:center;padding:40px 20px;color:var(--muted);}
+.no-courses-msg .icon{font-size:40px;margin-bottom:12px;opacity:.4;}
 
-.tab {
-  padding: 9px 18px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--muted);
-  font-family: 'DM Sans', sans-serif;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background .15s, color .15s, border-color .15s;
-}
+.grades-grid{display:flex;flex-wrap:wrap;gap:14px;margin-top:6px;}
+.grade-chip{padding:14px 22px;border-radius:12px;text-align:center;min-width:100px;}
+.grade-letter{font-family:'DM Serif Display',serif;font-size:32px;display:block;line-height:1;}
+.grade-subject{font-size:12px;margin-top:6px;opacity:.75;display:block;}
 
-.tab:hover {
-  background: #eef2ff;
-  color: var(--indigo);
-  border-color: #c7d2fe;
-}
-
-.tab.active {
-  background: var(--indigo);
-  color: white;
-  border-color: var(--indigo);
-}
-
-/* ── TAB PANEL ── */
-.tab-panel {
-  animation: fadeIn .2s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-/* ── GRADES GRID ── */
-.grades-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
-  margin-top: 6px;
-}
-
-.grade-chip {
-  padding: 14px 22px;
-  border-radius: 12px;
-  text-align: center;
-  min-width: 100px;
-}
-
-.grade-chip .grade-letter {
-  font-family: 'DM Serif Display', serif;
-  font-size: 32px;
-  display: block;
-  line-height: 1;
-}
-
-.grade-chip .grade-subject {
-  font-size: 12px;
-  margin-top: 6px;
-  opacity: .75;
-  display: block;
-}
-
-@media (max-width: 700px) {
-  .acad-wrap { padding: 16px 20px; }
-  .tab-bar   { gap: 6px; }
-  .tab       { padding: 8px 12px; font-size: 12px; }
-}
+@media(max-width:700px){.acad-wrap{padding:16px 20px;}.tab-bar{gap:6px;}.tab{padding:8px 12px;font-size:12px;}}
