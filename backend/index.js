@@ -83,7 +83,7 @@ app.use("/faculty",         require("./routes/faculty"));
 app.use("/club",          require("./routes/club"));
 app.use("/notifications", require("./routes/notifications"));
 app.use("/courses",       require("./routes/courses"));
-
+app.use("/ai", require("./routes/ai")); 
 /* ── DEFAULT ── */
 app.get("/", (req, res) => res.redirect("/login.html"));
 
